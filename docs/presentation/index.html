@@ -74,9 +74,17 @@
   .closer .links { margin-top: 1.5rem; color: var(--dim); font-size: .9rem; }
 
   /* Context pill */
-  .context-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .65rem; border-radius: 999px; background: var(--pill); color: var(--fg); font-size: .78rem; cursor: pointer; border: 1px solid #2a3142; transition: background .15s ease, border-color .15s ease; }
+  .context-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .65rem; border-radius: 999px; background: var(--pill); color: var(--fg); font-size: .78rem; cursor: pointer; border: 1px solid #2a3142; transition: background .15s ease, border-color .15s ease; font: inherit; font-size: .78rem; }
   .context-pill:hover { background: #2a3142; border-color: var(--accent); }
   .context-pill .dot { width: .42rem; height: .42rem; border-radius: 999px; background: var(--accent); }
+
+  /* Code pill */
+  .code-pill { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .65rem; border-radius: 999px; background: var(--pill); color: var(--fg); font-size: .78rem; cursor: pointer; border: 1px solid #2a3142; transition: background .15s ease, border-color .15s ease; font-family: inherit; }
+  .code-pill:hover { background: #2a3142; border-color: #4ec9b0; }
+  .code-pill .glyph { color: #4ec9b0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: .82rem; line-height: 1; }
+  .nav a.has-code { box-shadow: inset 0 0 0 1px rgba(78,201,176,.55); color: var(--fg); }
+  .nav a.has-code.has-context { box-shadow: inset 0 0 0 1px rgba(238, 0, 0, .55), inset 0 0 0 2px rgba(78,201,176,.40); }
+  .nav a.has-code:hover { box-shadow: inset 0 0 0 1px #4ec9b0; }
 
   /* Lightbox */
   .lightbox { position: fixed; inset: 0; background: rgba(8,10,16,.86); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 2rem; z-index: 50; opacity: 0; transition: opacity .18s ease; }
@@ -88,6 +96,13 @@
   .lightbox .close { background: transparent; border: 1px solid #2a3142; color: var(--fg); padding: .35rem .7rem; border-radius: 999px; font-size: .8rem; cursor: pointer; }
   .lightbox .close:hover { background: var(--pill); }
   .lightbox svg { display: block; width: 100%; height: auto; }
+  .lightbox .source { color: var(--dim); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; margin-bottom: .5rem; }
+  .lightbox pre { margin: 0; background: #0c1019; border: 1px solid #1f2533; border-radius: 8px; padding: 1rem 1.1rem; overflow: auto; max-height: 70vh; }
+  .lightbox pre code { font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; color: #e6e6e6; white-space: pre; }
+  .lightbox pre code .c  { color: #6a737d; }     /* comments */
+  .lightbox pre code .k  { color: #ee0000; }     /* keywords */
+  .lightbox pre code .s  { color: #4ec9b0; }     /* strings */
+  .lightbox pre code .n  { color: #d19a66; }     /* numbers */
 </style>
 </head>
 <body>
@@ -539,6 +554,124 @@ const DIAGRAMS = {
 // Slide 9 reuses slide 8's diagram (same topology beat).
 DIAGRAMS[9] = DIAGRAMS[8];
 
+// Code snippets — surgical, 5–25 lines each. Source path is shown in the lightbox.
+const CODE = {
+  8: {
+    title: "The OpenAI-compatible request",
+    sub: "One function defines the contract — same call against NGC or in-cluster vLLM.",
+    source: "app/server.py",
+    lang: "python",
+    body: `def upstream_chat(prompt: str) -> dict:
+    base  = os.environ["OPENAI_DEFAULT_URL"].rstrip("/")
+    key   = os.environ["OPENAI_DEFAULT_APIKEY"]
+    model = os.environ["OPENAI_DEFAULT_MODELNAME"]
+
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 256,
+        "temperature": 0.2,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        base + "/chat/completions",
+        data=body, method="POST",
+        headers={
+            "Authorization": f"Bearer {key}",
+            "Content-Type":  "application/json",
+            "Accept":        "application/json",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return json.loads(resp.read().decode("utf-8"))`
+  },
+
+  11: {
+    title: "The swap seam — three env vars",
+    sub: "Same code, two backends. Configuration is the only thing that changes.",
+    source: "app/server.py",
+    lang: "python",
+    body: `# These three lines are the entire promotion contract.
+base  = os.environ["OPENAI_DEFAULT_URL"].rstrip("/")
+key   = os.environ["OPENAI_DEFAULT_APIKEY"]
+model = os.environ["OPENAI_DEFAULT_MODELNAME"]
+
+# NGC      → integrate.api.nvidia.com/v1   meta/llama-3.1-8b-instruct
+# RHOAI    → vllm-composer-ai-apps.../v1   vllm  (Granite 3.0 8B on GPU)`
+  },
+
+  16: {
+    title: "RAG core — embed → cosine → rerank",
+    sub: "Issue #2 build instructions. Stdlib only; same env-var seam as chat.",
+    source: "app/server.py  (proposed)",
+    lang: "python",
+    body: `def embed(texts, input_type):
+    body = json.dumps({
+        "model": os.environ["EMBEDDINGS_MODEL"],
+        "input": texts,
+        "input_type": input_type,
+    }).encode()
+    return _post_json(os.environ["EMBEDDINGS_URL"], body)["data"]
+
+def rerank(query, passages):
+    body = json.dumps({
+        "model": os.environ["RERANK_MODEL"],
+        "query": {"text": query},
+        "passages": [{"text": p} for p in passages],
+        "truncate": "NONE",
+    }).encode()
+    return _post_json(os.environ["RERANK_URL"], body)["rankings"]
+
+def rag(query, passages, top_k=10, top_n=3):
+    qv  = embed([query], "query")[0]["embedding"]
+    pvs = embed(passages, "passage")
+    scored = sorted(
+        ((cosine(qv, p["embedding"]), i) for i, p in enumerate(pvs)),
+        reverse=True,
+    )
+    topk   = [passages[i] for _, i in scored[:top_k]]
+    ranked = rerank(query, topk)[:top_n]
+    return [topk[r["index"]] for r in ranked]`
+  },
+
+  17: {
+    title: "Calling the NVIDIA reranker",
+    sub: "Different host, per-model URL. Same bearer token as chat/embeddings.",
+    source: "docs/NVIDIA Models/embeddings-and-rerankers.md",
+    lang: "bash",
+    body: `MODEL="nvidia/llama-3.2-nv-rerankqa-1b-v2"
+MODEL_PATH="nvidia/llama-3_2-nv-rerankqa-1b-v2"   # URL slug uses 3_2
+
+curl -sS "https://ai.api.nvidia.com/v1/retrieval/\${MODEL_PATH}/reranking" \\
+  -H "Authorization: Bearer $NVIDIA_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "'"$MODEL"'",
+    "query":   { "text": "What is RHOAI?" },
+    "passages": [
+      { "text": "Red Hat OpenShift AI is an enterprise AI platform." },
+      { "text": "Bananas are yellow fruit." }
+    ],
+    "truncate": "NONE"
+  }'`
+  },
+};
+
+function escapeHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function openCode(s) {
+  const c = CODE[s.n];
+  const lb = document.getElementById("lightbox");
+  document.getElementById("lightboxTitle").textContent = c.title;
+  document.getElementById("lightboxSub").textContent = `Step ${s.n} · ${c.sub || ""}`;
+  document.getElementById("lightboxBody").innerHTML =
+    `<div class="source">${escapeHtml(c.source)} · ${escapeHtml(c.lang)}</div>` +
+    `<pre><code>${escapeHtml(c.body)}</code></pre>`;
+  lb.hidden = false;
+  requestAnimationFrame(() => lb.classList.add("open"));
+}
+
 function openLightbox(s) {
   const lb = document.getElementById("lightbox");
   document.getElementById("lightboxTitle").textContent = DIAGRAMS[s.n].title;
@@ -679,6 +812,14 @@ function renderSlide(s) {
     btn.addEventListener("click", () => openLightbox(s));
     pillRow.appendChild(btn);
   }
+  if (CODE[s.n]) {
+    const btn = document.createElement("button");
+    btn.className = "code-pill";
+    btn.type = "button";
+    btn.innerHTML = '<span class="glyph">&lt;/&gt;</span> View code';
+    btn.addEventListener("click", () => openCode(s));
+    pillRow.appendChild(btn);
+  }
   copy.appendChild(pillRow);
   row.appendChild(copy);
   slide.appendChild(row);
@@ -698,6 +839,10 @@ SEGMENTS.forEach(s => {
   if (DIAGRAMS[s.n]) {
     a.classList.add("has-context");
     a.title = "Has context diagram";
+  }
+  if (CODE[s.n]) {
+    a.classList.add("has-code");
+    a.title = (a.title ? a.title + " · " : "") + "Has code snippet";
   }
   navInner.insertBefore(a, closerLink);
 });
