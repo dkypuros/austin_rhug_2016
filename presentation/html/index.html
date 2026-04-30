@@ -69,6 +69,22 @@
   .closer ul { padding-left: 1.1rem; line-height: 1.7; color: var(--fg); }
   .closer li { margin: .25rem 0; }
   .closer .links { margin-top: 1.5rem; color: var(--dim); font-size: .9rem; }
+
+  /* Context pill */
+  .context-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .65rem; border-radius: 999px; background: var(--pill); color: var(--fg); font-size: .78rem; cursor: pointer; border: 1px solid #2a3142; transition: background .15s ease, border-color .15s ease; }
+  .context-pill:hover { background: #2a3142; border-color: var(--accent); }
+  .context-pill .dot { width: .42rem; height: .42rem; border-radius: 999px; background: var(--accent); }
+
+  /* Lightbox */
+  .lightbox { position: fixed; inset: 0; background: rgba(8,10,16,.86); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 2rem; z-index: 50; opacity: 0; transition: opacity .18s ease; }
+  .lightbox.open { display: flex; opacity: 1; }
+  .lightbox .frame { background: var(--bg2); border: 1px solid #232a39; border-radius: 12px; padding: 1.5rem 1.75rem; max-width: 980px; width: 100%; max-height: 88vh; overflow: auto; box-shadow: 0 24px 80px rgba(0,0,0,.55); }
+  .lightbox .head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .lightbox .head h3 { margin: 0; font-size: 1.05rem; color: var(--fg); }
+  .lightbox .head .sub { color: var(--dim); font-size: .8rem; }
+  .lightbox .close { background: transparent; border: 1px solid #2a3142; color: var(--fg); padding: .35rem .7rem; border-radius: 999px; font-size: .8rem; cursor: pointer; }
+  .lightbox .close:hover { background: var(--pill); }
+  .lightbox svg { display: block; width: 100%; height: auto; }
 </style>
 </head>
 <body>
@@ -108,6 +124,20 @@
   </section>
 </main>
 
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightboxTitle" hidden>
+  <div class="frame">
+    <div class="head">
+      <div>
+        <h3 id="lightboxTitle">Context</h3>
+        <div class="sub" id="lightboxSub"></div>
+      </div>
+      <button class="close" id="lightboxClose">Close · Esc</button>
+    </div>
+    <div id="lightboxBody"></div>
+  </div>
+</div>
+
 <nav class="nav">
   <div class="inner" id="navInner">
     <a class="cover-link" href="#cover">Cover</a>
@@ -123,6 +153,264 @@
  *
  * Leave youtube_id null to show the thumbnail with a "video coming" overlay.
  */
+
+// SVG palette aligned with the deck's CSS variables.
+const D = { bg:"#161c2a", line:"#2b3346", dim:"#9ba3af", fg:"#f5f5f5", accent:"#ee0000", pill:"#222a36", green:"#3fb950", mono:"ui-monospace, SFMono-Regular, Menlo, monospace" };
+
+const DIAGRAMS = {
+  // 8 — Sample app deployed (also reused for slide 9)
+  8: { title: "Topology — sample-chat in composer-ai-apps-demo",
+       sub: "How a request reaches the model on the GPU node",
+       svg: `
+<svg viewBox="0 0 960 360" xmlns="http://www.w3.org/2000/svg" font-family="${D.mono}" font-size="13" fill="${D.fg}">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${D.dim}"/></marker>
+  </defs>
+  <g>
+    <rect x="20" y="120" width="120" height="60" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="80" y="145" text-anchor="middle">Browser</text>
+    <text x="80" y="163" text-anchor="middle" fill="${D.dim}" font-size="11">user</text>
+
+    <line x1="140" y1="150" x2="180" y2="150" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="180" y="40" width="760" height="280" rx="14" fill="none" stroke="${D.line}" stroke-dasharray="3 3"/>
+    <text x="200" y="32" fill="${D.dim}" font-size="11">namespace · composer-ai-apps-demo</text>
+
+    <rect x="200" y="120" width="140" height="60" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="270" y="145" text-anchor="middle">Route</text>
+    <text x="270" y="163" text-anchor="middle" fill="${D.dim}" font-size="11">edge TLS</text>
+
+    <line x1="340" y1="150" x2="380" y2="150" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="380" y="120" width="140" height="60" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="450" y="145" text-anchor="middle">Service</text>
+    <text x="450" y="163" text-anchor="middle" fill="${D.dim}" font-size="11">sample-chat:8080</text>
+
+    <line x1="520" y1="150" x2="560" y2="150" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="560" y="100" width="170" height="100" rx="10" fill="${D.bg}" stroke="${D.line}"/>
+    <text x="645" y="125" text-anchor="middle">Pod · sample-chat</text>
+    <text x="645" y="148" text-anchor="middle" fill="${D.dim}" font-size="11">app/server.py</text>
+    <text x="645" y="170" text-anchor="middle" fill="${D.accent}" font-size="11">POST /chat</text>
+
+    <line x1="730" y1="150" x2="770" y2="150" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="770" y="100" width="160" height="100" rx="10" fill="${D.pill}" stroke="${D.accent}"/>
+    <text x="850" y="125" text-anchor="middle">vLLM (KServe)</text>
+    <text x="850" y="148" text-anchor="middle" fill="${D.dim}" font-size="11">Granite 3.0 8B</text>
+    <text x="850" y="170" text-anchor="middle" fill="${D.dim}" font-size="11">/v1/chat/completions</text>
+
+    <text x="200" y="270" fill="${D.dim}" font-size="12">Backend env vars choose the upstream:</text>
+    <text x="200" y="290" font-size="12">OPENAI_DEFAULT_URL · OPENAI_DEFAULT_APIKEY · OPENAI_DEFAULT_MODELNAME</text>
+  </g>
+</svg>` },
+
+  // 11 — Backend swap seam
+  11: { title: "The swap seam — three env vars",
+        sub: "Same code, two backends; only configuration changes",
+        svg: `
+<svg viewBox="0 0 960 360" xmlns="http://www.w3.org/2000/svg" font-family="${D.mono}" font-size="13" fill="${D.fg}">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${D.dim}"/></marker>
+  </defs>
+  <rect x="340" y="110" width="280" height="160" rx="12" fill="${D.pill}" stroke="${D.line}"/>
+  <text x="480" y="138" text-anchor="middle" font-size="14">app/server.py</text>
+  <text x="480" y="160" text-anchor="middle" fill="${D.dim}" font-size="11">POST /chat → forwards to /chat/completions</text>
+  <text x="360" y="190" font-size="12" fill="${D.fg}">OPENAI_DEFAULT_URL</text>
+  <text x="360" y="210" font-size="12" fill="${D.fg}">OPENAI_DEFAULT_APIKEY</text>
+  <text x="360" y="230" font-size="12" fill="${D.fg}">OPENAI_DEFAULT_MODELNAME</text>
+  <text x="600" y="190" font-size="11" fill="${D.dim}" text-anchor="end">↑ from ConfigMap</text>
+  <text x="600" y="210" font-size="11" fill="${D.dim}" text-anchor="end">↑ from Secret</text>
+  <text x="600" y="230" font-size="11" fill="${D.dim}" text-anchor="end">↑ from ConfigMap</text>
+
+  <line x1="340" y1="190" x2="200" y2="80"  stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="620" y1="190" x2="760" y2="80"  stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+  <rect x="60" y="40"  width="280" height="60" rx="10" fill="${D.bg}" stroke="${D.line}"/>
+  <text x="200" y="65"  text-anchor="middle">NVIDIA NGC · integrate.api.nvidia.com</text>
+  <text x="200" y="85"  text-anchor="middle" fill="${D.dim}" font-size="11">model: meta/llama-3.1-8b-instruct</text>
+
+  <rect x="620" y="40" width="280" height="60" rx="10" fill="${D.bg}" stroke="${D.accent}"/>
+  <text x="760" y="65" text-anchor="middle">In-cluster vLLM (RHOAI)</text>
+  <text x="760" y="85" text-anchor="middle" fill="${D.dim}" font-size="11">model: vllm  ·  Granite 3.0 8B</text>
+
+  <text x="480" y="320" text-anchor="middle" fill="${D.dim}" font-size="12">Same Route, same UI — Argo CD reconciles the env values from git.</text>
+</svg>` },
+
+  // 12 — Argo CD + Tekton verified
+  12: { title: "GitOps reconciliation",
+        sub: "git → Argo CD Application → cluster · Tekton verifies",
+        svg: `
+<svg viewBox="0 0 960 320" xmlns="http://www.w3.org/2000/svg" font-family="${D.mono}" font-size="13" fill="${D.fg}">
+  <defs>
+    <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${D.dim}"/></marker>
+  </defs>
+  <rect x="40"  y="120" width="200" height="80" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+  <text x="140" y="148" text-anchor="middle">git · main</text>
+  <text x="140" y="170" text-anchor="middle" fill="${D.dim}" font-size="11">manifests/sample-app/</text>
+  <text x="140" y="188" text-anchor="middle" fill="${D.dim}" font-size="11">configmap · deployment</text>
+
+  <line x1="240" y1="160" x2="290" y2="160" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <rect x="290" y="120" width="220" height="80" rx="10" fill="${D.pill}" stroke="${D.accent}"/>
+  <text x="400" y="148" text-anchor="middle">Argo CD Application</text>
+  <text x="400" y="170" text-anchor="middle" fill="${D.dim}" font-size="11">Synced · Healthy</text>
+  <text x="400" y="188" text-anchor="middle" fill="${D.dim}" font-size="11">prune · selfHeal</text>
+
+  <line x1="510" y1="160" x2="560" y2="160" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <rect x="560" y="120" width="220" height="80" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+  <text x="670" y="148" text-anchor="middle">Cluster</text>
+  <text x="670" y="170" text-anchor="middle" fill="${D.dim}" font-size="11">Deployments rolled</text>
+  <text x="670" y="188" text-anchor="middle" fill="${D.dim}" font-size="11">Route accepted</text>
+
+  <rect x="290" y="40"  width="220" height="50" rx="10" fill="${D.bg}" stroke="${D.line}"/>
+  <text x="400" y="62"  text-anchor="middle" fill="${D.dim}">Tekton PipelineRun</text>
+  <text x="400" y="80"  text-anchor="middle" fill="${D.green}" font-size="11">Succeeded</text>
+
+  <line x1="400" y1="90"  x2="400" y2="118" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <text x="480" y="270" text-anchor="middle" fill="${D.dim}" font-size="12">Direct oc edit on Argo-managed objects gets reverted within seconds.</text>
+</svg>` },
+
+  // 14 — Before/after env diff (the punchline)
+  14: { title: "The promotion — before vs after",
+        sub: "One commit moves the app onto the on-cluster model",
+        svg: `
+<svg viewBox="0 0 960 380" xmlns="http://www.w3.org/2000/svg" font-family="${D.mono}" font-size="12" fill="${D.fg}">
+  <rect x="30"  y="40" width="430" height="300" rx="12" fill="${D.bg}" stroke="${D.line}"/>
+  <rect x="500" y="40" width="430" height="300" rx="12" fill="${D.bg}" stroke="${D.accent}"/>
+  <text x="55"  y="68" font-size="11" fill="${D.dim}" letter-spacing="1.5">BEFORE — NVIDIA NGC</text>
+  <text x="525" y="68" font-size="11" fill="${D.dim}" letter-spacing="1.5">AFTER — IN-CLUSTER vLLM</text>
+
+  <g font-family="${D.mono}" font-size="12">
+    <text x="55" y="110">env:</text>
+    <text x="55" y="135">  - name: OPENAI_DEFAULT_URL</text>
+    <text x="55" y="155" fill="${D.green}">    value: https://integrate.api.nvidia.com/v1</text>
+    <text x="55" y="180">  - name: OPENAI_DEFAULT_APIKEY</text>
+    <text x="55" y="200" fill="${D.dim}">    valueFrom: secret/llm-credentials</text>
+    <text x="55" y="225">  - name: OPENAI_DEFAULT_MODELNAME</text>
+    <text x="55" y="245" fill="${D.green}">    value: meta/llama-3.1-8b-instruct</text>
+  </g>
+
+  <g font-family="${D.mono}" font-size="12">
+    <text x="525" y="110">env:</text>
+    <text x="525" y="135">  - name: OPENAI_DEFAULT_URL</text>
+    <text x="525" y="155" fill="${D.accent}">    value: https://vllm-composer-ai-apps.apps.../v1</text>
+    <text x="525" y="180">  - name: OPENAI_DEFAULT_APIKEY</text>
+    <text x="525" y="200" fill="${D.dim}">    valueFrom: secret/llm-credentials</text>
+    <text x="525" y="225">  - name: OPENAI_DEFAULT_MODELNAME</text>
+    <text x="525" y="245" fill="${D.accent}">    value: vllm</text>
+    <text x="525" y="270">  - name: OPENAI_INSECURE_TLS</text>
+    <text x="525" y="290" fill="${D.dim}">    value: "1"  # demo lab self-signed</text>
+  </g>
+
+  <text x="480" y="365" text-anchor="middle" fill="${D.dim}" font-size="12">Same Route. Same UI. Three lines change in git.</text>
+</svg>` },
+
+  // 16 — RAG flow
+  16: { title: "RAG pipeline — same env-var seam",
+        sub: "embed → cosine top-K → rerank → chat",
+        svg: `
+<svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" font-family="${D.mono}" font-size="12" fill="${D.fg}">
+  <defs>
+    <marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${D.dim}"/></marker>
+  </defs>
+
+  <g>
+    <rect x="30"  y="100" width="140" height="80" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="100" y="128" text-anchor="middle" font-size="13">Query</text>
+    <text x="100" y="150" text-anchor="middle" fill="${D.dim}">/rag</text>
+  </g>
+
+  <line x1="170" y1="140" x2="210" y2="140" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+  <g>
+    <rect x="210" y="100" width="160" height="80" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="290" y="128" text-anchor="middle" font-size="13">Embed</text>
+    <text x="290" y="150" text-anchor="middle" fill="${D.dim}" font-size="11">nv-embedqa-e5-v5</text>
+    <text x="290" y="168" text-anchor="middle" fill="${D.dim}" font-size="11">EMBEDDINGS_URL</text>
+  </g>
+
+  <line x1="370" y1="140" x2="410" y2="140" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+  <g>
+    <rect x="410" y="100" width="170" height="80" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="495" y="128" text-anchor="middle" font-size="13">Cosine top-K</text>
+    <text x="495" y="150" text-anchor="middle" fill="${D.dim}" font-size="11">in-process</text>
+  </g>
+
+  <line x1="580" y1="140" x2="620" y2="140" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+  <g>
+    <rect x="620" y="100" width="170" height="80" rx="10" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="705" y="128" text-anchor="middle" font-size="13">Rerank</text>
+    <text x="705" y="150" text-anchor="middle" fill="${D.dim}" font-size="11">llama-3.2-rerankqa-1b</text>
+    <text x="705" y="168" text-anchor="middle" fill="${D.dim}" font-size="11">RERANK_URL</text>
+  </g>
+
+  <line x1="790" y1="140" x2="830" y2="140" stroke="${D.dim}" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+  <g>
+    <rect x="830" y="100" width="100" height="80" rx="10" fill="${D.pill}" stroke="${D.accent}"/>
+    <text x="880" y="128" text-anchor="middle" font-size="13">Chat</text>
+    <text x="880" y="150" text-anchor="middle" fill="${D.dim}" font-size="11">vllm</text>
+    <text x="880" y="168" text-anchor="middle" fill="${D.dim}" font-size="11">/chat/completions</text>
+  </g>
+
+  <text x="480" y="240" text-anchor="middle" fill="${D.dim}">Each backend is one URL + one model name; promote any of them on-cluster the same way.</text>
+</svg>` },
+
+  // 17 — NVIDIA reranker discovery
+  17: { title: "build.nvidia.com — discoverable NIMs",
+        sub: "Two hits for Llama 3.2 NV-RerankQA — reranker and embedder",
+        svg: `
+<svg viewBox="0 0 960 360" xmlns="http://www.w3.org/2000/svg" font-family="${D.mono}" font-size="13" fill="${D.fg}">
+  <rect x="20" y="20" width="920" height="320" rx="14" fill="${D.bg}" stroke="${D.line}"/>
+  <text x="40" y="55" font-size="13" fill="${D.dim}" letter-spacing="1.5">SEARCH</text>
+  <rect x="40" y="65" width="500" height="36" rx="8" fill="${D.pill}" stroke="${D.line}"/>
+  <text x="55" y="88">Llama 3.2 NV-RerankQA 1B v2</text>
+  <text x="40" y="135" fill="${D.dim}" font-size="12">2 results</text>
+
+  <g>
+    <rect x="40"  y="155" width="420" height="160" rx="12" fill="${D.pill}" stroke="${D.accent}"/>
+    <text x="60"  y="185" font-size="14">llama-3.2-nv-rerankqa-1b-v2</text>
+    <text x="60"  y="208" fill="${D.dim}" font-size="11">Fine-tuned reranking model · long context</text>
+    <text x="60"  y="252" fill="${D.dim}" font-size="11">POST /v1/retrieval/.../reranking</text>
+    <text x="60"  y="270" fill="${D.dim}" font-size="11">host: ai.api.nvidia.com</text>
+    <text x="440" y="185" font-size="11" fill="${D.green}" text-anchor="end">Downloadable</text>
+  </g>
+
+  <g>
+    <rect x="500" y="155" width="420" height="160" rx="12" fill="${D.pill}" stroke="${D.line}"/>
+    <text x="520" y="185" font-size="14">llama-3.2-nv-embedqa-1b-v2</text>
+    <text x="520" y="208" fill="${D.dim}" font-size="11">Multilingual embedding · retrieval-tuned</text>
+    <text x="520" y="252" fill="${D.dim}" font-size="11">POST /v1/embeddings</text>
+    <text x="520" y="270" fill="${D.dim}" font-size="11">host: integrate.api.nvidia.com</text>
+    <text x="900" y="185" font-size="11" fill="${D.green}" text-anchor="end">Downloadable</text>
+  </g>
+</svg>` },
+};
+
+// Slide 9 reuses slide 8's diagram (same topology beat).
+DIAGRAMS[9] = DIAGRAMS[8];
+
+function openLightbox(s) {
+  const lb = document.getElementById("lightbox");
+  document.getElementById("lightboxTitle").textContent = DIAGRAMS[s.n].title;
+  document.getElementById("lightboxSub").textContent = `Step ${s.n} · ${DIAGRAMS[s.n].sub || ""}`;
+  document.getElementById("lightboxBody").innerHTML = DIAGRAMS[s.n].svg;
+  lb.hidden = false;
+  requestAnimationFrame(() => lb.classList.add("open"));
+}
+function closeLightbox() {
+  const lb = document.getElementById("lightbox");
+  lb.classList.remove("open");
+  setTimeout(() => { lb.hidden = true; document.getElementById("lightboxBody").innerHTML = ""; }, 180);
+}
+document.getElementById("lightboxClose").addEventListener("click", closeLightbox);
+document.getElementById("lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox") closeLightbox(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+
 const SEGMENTS = [
   { n: 1,  slug: "ngc-catalog-browse",       title: "Browse NVIDIA NGC",
     beat: "Open catalog.ngc.nvidia.com to evaluate hosted models. The same client we'll build talks OpenAI-compatible JSON to either NGC or our own cluster.",
@@ -233,6 +521,14 @@ function renderSlide(s) {
     link.rel = "noopener";
     link.textContent = "▶  Watch on YouTube";
     pillRow.appendChild(link);
+  }
+  if (DIAGRAMS[s.n]) {
+    const btn = document.createElement("button");
+    btn.className = "context-pill";
+    btn.type = "button";
+    btn.innerHTML = '<span class="dot"></span> View context diagram';
+    btn.addEventListener("click", () => openLightbox(s));
+    pillRow.appendChild(btn);
   }
   copy.appendChild(pillRow);
   row.appendChild(copy);
