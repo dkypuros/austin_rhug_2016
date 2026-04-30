@@ -840,8 +840,11 @@ function renderSlide(s) {
     wrap.appendChild(el("span", "label", "🎙 NARRATION"));
     const audio = document.createElement("audio");
     audio.controls = true;
-    audio.preload = "none";
-    audio.src = `audio/${s.n}_${s.slug}.mp3`;
+    audio.preload = "metadata";
+    const source = document.createElement("source");
+    source.src = `audio/${s.n}_${s.slug}.mp3`;
+    source.type = "audio/mpeg";
+    audio.appendChild(source);
     wrap.appendChild(audio);
     slide.appendChild(wrap);
   }
