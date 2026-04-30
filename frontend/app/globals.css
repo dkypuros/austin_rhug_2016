@@ -117,3 +117,53 @@ code { color: #fdba74; }
   .card-header { flex-direction: column; }
   .status-stack { align-items: flex-start; max-width: 100%; }
 }
+
+.mode-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0 0 1rem;
+  padding: 0.25rem;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: rgba(2, 8, 23, 0.62);
+}
+
+.mode-tab {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0.5rem 0.85rem;
+}
+
+.mode-tab-active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.mode-tab:disabled { cursor: not-allowed; opacity: 0.58; }
+.field-label-spaced { margin-top: 1rem; }
+.field-hint { color: var(--muted); font-size: 0.82rem; font-weight: 500; }
+.passages-input { min-height: 7.5rem; }
+
+.used-passages {
+  margin-top: 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  background: rgba(2, 8, 23, 0.48);
+  padding: 1rem;
+}
+
+.used-passages h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.used-passages ol { margin: 0; padding-left: 1.35rem; color: #e2e8f0; }
+.used-passages li + li { margin-top: 0.55rem; }
+.used-passages p { margin: 0; color: var(--muted); }

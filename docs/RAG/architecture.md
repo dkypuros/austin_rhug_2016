@@ -73,6 +73,50 @@ The promotion is the same shape as Act 3 in [issue #1](https://github.com/dkypur
 
 Step-by-step build is in [issue #2](https://github.com/dkypuros/austin_rhug_2016/issues/2) under "Build instructions" — preflight, backend helpers, local smoke test, frontend toggle, manifest changes, cluster apply, on-cluster promotion.
 
+
+## Worked example (Phase A)
+
+The current app keeps generation on the OpenShift AI vLLM route and uses hosted NVIDIA retrieval for the RAG lane:
+
+```sh
+API="https://sample-chat-api-composer-ai-apps-demo.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com"
+
+curl -sk "$API/rag/info" | python3 -m json.tool
+curl -sk -X POST "$API/rag" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "query": "What runs models on GPU nodes in this demo?",
+    "passages": [
+      "Red Hat OpenShift AI ships a vLLM NVIDIA GPU ServingRuntime for KServe.",
+      "Bananas are yellow fruit and unrelated to Kubernetes.",
+      "The InferenceService selects the model serving runtime and exposes a REST inference endpoint."
+    ],
+    "top_k": 3,
+    "top_n": 2
+  }' | python3 -m json.tool
+```
+
+Expected success shape after the NVIDIA key is entitled for the reranker:
+
+```json
+{
+  "model": "vllm",
+  "embed_model": "nvidia/nv-embedqa-e5-v5",
+  "rerank_model": "nvidia/llama-3.2-nv-rerankqa-1b-v2",
+  "reply": "...",
+  "used_passages": ["..."],
+  "used_passage_indexes": [0]
+}
+```
+
+If the hosted reranker is not yet provisioned for the demo key, `/rag` fails closed with an upstream stage marker rather than pretending retrieval succeeded:
+
+```json
+{ "error": "upstream_rerank", "detail": "404 page not found\n" }
+```
+
+That blocker is resolved by provisioning the reranker model card on `build.nvidia.com` for the account that owns `NVIDIA_API_KEY`, then rerunning the same request. Chat mode remains available because it uses the existing `/chat` path and the OpenShift AI vLLM endpoint.
+
 ## Related references
 
 - [`docs/NVIDIA Models/embeddings-and-rerankers.md`](../NVIDIA%20Models/embeddings-and-rerankers.md) — endpoint shapes, request bodies, entitlement gotcha.

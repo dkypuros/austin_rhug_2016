@@ -22,7 +22,15 @@ OPENAI_DEFAULT_APIKEY     from Secret llm-credentials, key apiKey
 OPENAI_DEFAULT_MODELNAME  e.g. vllm                          (RHOAI vLLM)
                           or  meta/llama-3.1-8b-instruct     (NVIDIA NGC)
 OPENAI_INSECURE_TLS       optional lab-only escape hatch for self-signed TLS
+EMBEDDINGS_URL            hosted NVIDIA embeddings endpoint for Phase A RAG
+EMBEDDINGS_MODEL          e.g. nvidia/nv-embedqa-e5-v5
+RERANK_URL                hosted NVIDIA reranker endpoint for Phase A RAG
+RERANK_MODEL              e.g. nvidia/llama-3.2-nv-rerankqa-1b-v2
 ```
+
+Phase A RAG uses hosted NVIDIA retrieval for embeddings/reranking while preserving the existing RHOAI vLLM chat endpoint. It does not add file upload, document ingestion, or persistent vector storage; the frontend passes ad-hoc passages to the backend for retrieval.
+
+`OPENAI_DEFAULT_APIKEY` can remain a harmless placeholder for the current RHOAI vLLM chat route, but a real NVIDIA API key in the `llm-credentials` Secret is required before hosted NVIDIA embeddings or reranking will work.
 
 Frontend configuration should contain only a backend service URL or proxy target. Never put `OPENAI_DEFAULT_APIKEY` or provider API keys in browser-visible frontend variables.
 
@@ -103,6 +111,8 @@ oc login "$OPENSHIFT_API_URL" -u "$OPENSHIFT_ADMIN_USER" -p "$OPENSHIFT_ADMIN_PA
 oc apply -f manifests/sample-app/00-namespace.yaml
 
 # Create the backend Secret from local, ignored credentials. Do not commit the rendered Secret.
+# The existing RHOAI vLLM chat endpoint accepts a placeholder key, but hosted
+# NVIDIA retrieval requires a real NVIDIA API key.
 set -a; source .env_NVIDIA; set +a
 oc -n composer-ai-apps-demo create secret generic llm-credentials \
   --from-literal=apiKey="$NVIDIA_API_KEY" \

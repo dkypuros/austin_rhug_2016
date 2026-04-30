@@ -50,6 +50,26 @@ spec:
                   name: sample-chat-config
                   key: OPENAI_INSECURE_TLS
                   optional: true
+            - name: EMBEDDINGS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: EMBEDDINGS_URL
+            - name: EMBEDDINGS_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: EMBEDDINGS_MODEL
+            - name: RERANK_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: RERANK_URL
+            - name: RERANK_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: RERANK_MODEL
             - name: OPENAI_DEFAULT_APIKEY
               valueFrom:
                 secretKeyRef:

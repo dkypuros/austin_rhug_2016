@@ -10,6 +10,35 @@ export type ChatResponse = {
   detail?: string;
 };
 
+export type RagInfo = BackendInfo & {
+  chat_backend_url?: string;
+  chat_model?: string;
+  embeddings_url?: string;
+  embeddings_model?: string;
+  embed_model?: string;
+  rerank_url?: string;
+  rerank_model?: string;
+  rag_endpoint?: string;
+};
+
+export type RagRequest = {
+  query: string;
+  passages: string[];
+  top_k?: number;
+  top_n?: number;
+};
+
+export type RagResponse = {
+  model?: string;
+  embed_model?: string;
+  embeddings_model?: string;
+  rerank_model?: string;
+  reply?: string;
+  used_passages?: string[];
+  error?: string;
+  detail?: string;
+};
+
 export const DEFAULT_BACKEND_URL = "http://localhost:8080";
 
 export function getBackendUrl(): string {

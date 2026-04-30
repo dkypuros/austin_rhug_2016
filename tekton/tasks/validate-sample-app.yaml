@@ -42,4 +42,11 @@ spec:
           exit 1
         fi
 
+        for key in EMBEDDINGS_URL EMBEDDINGS_MODEL RERANK_URL RERANK_MODEL; do
+          if ! grep -q "name: $key" "$rendered" || ! grep -q "key: $key" "$rendered"; then
+            echo "Rendered backend Deployment is missing $key configMap wiring" >&2
+            exit 1
+          fi
+        done
+
         oc apply --dry-run=client --validate=false -f "$rendered"
