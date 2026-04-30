@@ -1,0 +1,7 @@
+deck_id: austin_rhug_2026
+research_root: /Users/davidkypuros/Documents/Git_ONLINE/austin_rhug_2026
+research_rev: 2026-04-29
+manifest: README.md
+backend: pptx
+validate_evidence: off
+publish_visibility: private

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Austin RHUG 2026 — From NVIDIA NGC to Red Hat OpenShift AI</title>
+<style>
+  :root {
+    --bg: #0f141e;
+    --bg2: #161c2a;
+    --pill: #222a36;
+    --fg: #f5f5f5;
+    --dim: #9ba3af;
+    --accent: #ee0000;
+    --max: 1200px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); font-family: -apple-system, "Helvetica Neue", system-ui, sans-serif; }
+  body { min-height: 100vh; }
+  a { color: var(--fg); }
+  .deck { max-width: var(--max); margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+
+  /* Top bar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .25rem 0 1.5rem; border-bottom: 1px solid #1f2533; margin-bottom: 1.5rem; }
+  .topbar .brand { font-size: 13px; letter-spacing: .14em; color: var(--dim); }
+  .topbar .brand b { color: var(--fg); letter-spacing: 0; font-weight: 700; margin-left: .35rem; }
+  .topbar .progress { font-size: 13px; color: var(--dim); }
+
+  /* Cover */
+  .cover { padding: 3rem 0 4rem; border-bottom: 1px solid #1f2533; margin-bottom: 3rem; }
+  .cover .kicker { font-size: 12px; letter-spacing: .18em; color: var(--dim); font-weight: 700; }
+  .cover h1 { font-size: clamp(2rem, 4.5vw, 3.4rem); line-height: 1.1; margin: .8rem 0 .4rem; max-width: 22ch; }
+  .cover .lede { font-size: clamp(1rem, 1.6vw, 1.25rem); color: var(--dim); max-width: 60ch; line-height: 1.5; }
+  .cover .meta { margin-top: 2rem; font-size: 13px; color: var(--dim); }
+  .cover .meta a { color: var(--dim); text-decoration: underline; }
+
+  /* Video slide */
+  .slide { padding: 2.25rem 0 3rem; border-bottom: 1px solid #1f2533; }
+  .slide:last-child { border-bottom: 0; }
+  .slide .row { display: grid; grid-template-columns: 1fr; gap: 1.4rem; align-items: start; }
+  @media (min-width: 900px) { .slide .row { grid-template-columns: 1.55fr 1fr; gap: 2rem; } }
+
+  .slide .head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .badge { width: 2.2rem; height: 2.2rem; border-radius: 999px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1.05rem; flex: 0 0 auto; }
+  .slide h2 { font-size: 1.6rem; margin: 0; }
+  .pill { display: inline-flex; align-items: center; padding: .25rem .55rem; border-radius: 999px; background: var(--pill); color: var(--fg); font-size: .78rem; }
+  .pill.dim { color: var(--dim); }
+
+  /* Video player wrapper */
+  .player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.35); }
+  .player iframe, .player img { width: 100%; height: 100%; display: block; border: 0; }
+  .player .placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: var(--fg); background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.55)); pointer-events: none; }
+  .player .placeholder .pill { background: rgba(20,24,32,.85); color: var(--dim); }
+
+  .copy h3 { color: var(--dim); font-size: .8rem; letter-spacing: .14em; margin: .25rem 0 .5rem; font-weight: 700; }
+  .copy p { font-size: 1.02rem; line-height: 1.55; margin: 0 0 1rem; }
+  .copy .meta { font-size: .85rem; color: var(--dim); }
+  .copy .meta a { color: var(--dim); }
+
+  /* Nav strip */
+  .nav { position: sticky; bottom: 1rem; margin: 2rem auto 0; max-width: var(--max); padding: 0 1.5rem; }
+  .nav .inner { display: flex; flex-wrap: wrap; gap: .35rem; padding: .55rem; background: rgba(22,28,42,.92); backdrop-filter: blur(8px); border: 1px solid #232a39; border-radius: 999px; }
+  .nav a { display: inline-flex; min-width: 1.9rem; height: 1.9rem; padding: 0 .55rem; align-items: center; justify-content: center; border-radius: 999px; font-size: .82rem; color: var(--dim); text-decoration: none; }
+  .nav a:hover { background: var(--pill); color: var(--fg); }
+  .nav a.cover-link { background: transparent; }
+
+  /* Closer */
+  .closer h2 { font-size: 2rem; margin: 0 0 .5rem; }
+  .closer ul { padding-left: 1.1rem; line-height: 1.7; color: var(--fg); }
+  .closer li { margin: .25rem 0; }
+  .closer .links { margin-top: 1.5rem; color: var(--dim); font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">AUSTIN RHUG <b>2026</b></div>
+  <div class="progress" id="progress">17 video walkthrough · paired with the .pptx deck</div>
+</header>
+
+<main class="deck">
+
+  <!-- Cover -->
+  <section class="cover" id="cover">
+    <div class="kicker">FROM NVIDIA NGC TO RED HAT OPENSHIFT AI</div>
+    <h1>Evaluate hosted models, then promote your app onto your own GPU.</h1>
+    <p class="lede">17 short videos that build a working OpenAI-compatible app on a real RHOAI cluster, then move it from NVIDIA NGC to in-cluster vLLM with a single GitOps change. Click any video to play.</p>
+    <p class="meta">github.com/dkypuros/austin_rhug_2016 · issues <a href="https://github.com/dkypuros/austin_rhug_2016/issues/1">#1</a> (chat) and <a href="https://github.com/dkypuros/austin_rhug_2016/issues/2">#2</a> (RAG)</p>
+  </section>
+
+  <!-- Slides will be rendered into here -->
+  <div id="slides"></div>
+
+  <!-- Closer -->
+  <section class="slide closer" id="closer">
+    <div class="head">
+      <div class="badge" style="background:#222a36;color:var(--fg)">★</div>
+      <h2>What we built</h2>
+    </div>
+    <h2 style="font-size:2rem;margin:0 0 1rem">One client. Two backends. One commit between them.</h2>
+    <ul>
+      <li>Same OpenAI-compatible client — three env vars choose the backend.</li>
+      <li>NVIDIA NGC for evaluation; in-cluster vLLM (Granite on RHOAI) for production.</li>
+      <li>Argo CD owns the swap; same Route, same UI, no code change.</li>
+      <li>Issue #2 extends the same seam to embeddings + reranking for full RAG.</li>
+    </ul>
+    <p class="links">github.com/dkypuros/austin_rhug_2016 · issues <a href="https://github.com/dkypuros/austin_rhug_2016/issues/1">#1</a> and <a href="https://github.com/dkypuros/austin_rhug_2016/issues/2">#2</a></p>
+  </section>
+</main>
+
+<nav class="nav">
+  <div class="inner" id="navInner">
+    <a class="cover-link" href="#cover">Cover</a>
+    <!-- numbered links injected by JS -->
+    <a href="#closer">★</a>
+  </div>
+</nav>
+
+<script>
+/*
+ * Add YouTube IDs as you upload. Each segment supports:
+ *   youtube_id: "dQw4w9WgXcQ"   ← extracted from https://youtu.be/<ID> or https://youtube.com/watch?v=<ID>
+ *
+ * Leave youtube_id null to show the thumbnail with a "video coming" overlay.
+ */
+const SEGMENTS = [
+  { n: 1,  slug: "ngc-catalog-browse",       title: "Browse NVIDIA NGC",
+    beat: "Open catalog.ngc.nvidia.com to evaluate hosted models. The same client we'll build talks OpenAI-compatible JSON to either NGC or our own cluster.",
+    youtube_id: "dU7O3q-z1ks" },
+  { n: 2,  slug: "terminal-pwd-setup",       title: "Workspace setup",
+    beat: "Fresh terminal, working directory at austin_rhug_2026. Nothing in the harness yet — clean slate.",
+    youtube_id: null },
+  { n: 3,  slug: "harness-security-review",  title: "Security review of the harness",
+    beat: "Claude reviews docs/access.md and .gitignore for secret-handling risk before any code lands. Sets the bar: no .env_* in git, ever.",
+    youtube_id: null },
+  { n: 4,  slug: "claude-code-launch",       title: "Claude Code launches",
+    beat: "Bring up Claude Code (Opus 4.7) inside the project. Plan: build app + tests + manifests against a real RHOAI cluster.",
+    youtube_id: null },
+  { n: 5,  slug: "initial-push-to-github",   title: "First push to GitHub",
+    beat: "Architect/critic review pass, secret-scan green, kustomize/YAML validated. Small initial harness gets committed and pushed.",
+    youtube_id: null },
+  { n: 6,  slug: "github-repo-overview",     title: "Repo overview",
+    beat: "github.com/dkypuros/austin_rhug_2016 — apps/, docs/, gitops/argocd/, tekton/, .env_*.example, harness CLAUDE.md. The skeleton the demo will grow into.",
+    youtube_id: null },
+  { n: 7,  slug: "tag-and-push-v0.1.0",      title: "Tag v0.1.0 and push",
+    beat: "Cut the first release tag and push README + manifests for the sample app. Establishes the GitOps source of truth.",
+    youtube_id: null },
+  { n: 8,  slug: "sample-app-deployed",      title: "Sample app live on the cluster",
+    beat: "Namespace composer-ai-apps-demo, ConfigMap + Secret + Deployment + Route created. End-to-end smoke test returns a real Llama-3.1-8B answer.",
+    youtube_id: null },
+  { n: 9,  slug: "openshift-route-accepted", title: "OpenShift Route accepted",
+    beat: "Verify in the OCP console: Routes → sample-chat → Accepted. The browser-facing URL we'll demo against is live.",
+    youtube_id: null },
+  { n: 10, slug: "local-vs-origin-diff",     title: "Local vs origin diff",
+    beat: "RHOAI Reference docs and the sample app exist locally but aren't on origin/main yet. Surfaces the need to push so the demo is reproducible.",
+    youtube_id: null },
+  { n: 11, slug: "backend-architecture-qa",  title: "Backend architecture Q&A",
+    beat: "Walk through app/server.py: POST /chat, three env vars (URL/APIKEY/MODELNAME), forwards to /chat/completions upstream. The swap surface.",
+    youtube_id: null },
+  { n: 12, slug: "gitops-tekton-verified",   title: "Argo CD + Tekton verified",
+    beat: "Argo CD Application Synced/Healthy, Tekton PipelineRun Succeeded, Deployments rolled out. The pipeline that owns the demo app from now on.",
+    youtube_id: null },
+  { n: 13, slug: "curl-vllm-verification",   title: "curl the in-cluster vLLM",
+    beat: "HTTP 200 from /v1/chat/completions on vllm-composer-ai-apps. Granite 3.0 8B Instruct, served from the GPU node, OpenAI-compatible.",
+    youtube_id: null },
+  { n: 14, slug: "live-frontend-vllm-swap",  title: "Frontend now on the on-cluster model",
+    beat: "Same Next.js page, no code change — backend pill flips to vllm-composer-ai-apps and model: vllm. The promotion moment.",
+    youtube_id: null },
+  { n: 15, slug: "issue-2-followup-prompt",  title: "Issue #2 follow-up",
+    beat: "Plan the next beat: add embeddings + reranking on the same env-var seam. Tracked in GitHub issue #2.",
+    youtube_id: null },
+  { n: 16, slug: "rag-walkthrough-pills",    title: "RAG walkthrough",
+    beat: "Three pills appear: chat (vllm), embed (nv-embedqa-e5-v5), rerank (llama-3.2-nv-rerankqa-1b-v2). Same backend, retrieval lane added.",
+    youtube_id: null },
+  { n: 17, slug: "nvidia-rerank-search",     title: "Discover the reranker on build.nvidia.com",
+    beat: "Two NIM hits for Llama 3.2 NV-RerankQA — the reranker and the embedder. Closes the loop: hosted NIMs available, ready to promote on-cluster too.",
+    youtube_id: null },
+];
+
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+
+function renderSlide(s) {
+  const slide = el("section", "slide");
+  slide.id = `s${s.n}`;
+
+  const head = el("div", "head");
+  head.appendChild(el("div", "badge", String(s.n)));
+  head.appendChild(el("h2", null, `Step ${s.n} — ${s.title}`));
+  slide.appendChild(head);
+
+  const row = el("div", "row");
+
+  // Player
+  const player = el("div", "player");
+  if (s.youtube_id) {
+    const ifr = document.createElement("iframe");
+    ifr.src = `https://www.youtube-nocookie.com/embed/${s.youtube_id}?rel=0&modestbranding=1`;
+    ifr.title = s.title;
+    ifr.loading = "lazy";
+    ifr.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    ifr.allowFullscreen = true;
+    player.appendChild(ifr);
+  } else {
+    const img = document.createElement("img");
+    img.src = `assets/thumbs/${s.n}_${s.slug}.jpg`;
+    img.alt = s.title;
+    player.appendChild(img);
+    const ph = el("div", "placeholder");
+    ph.appendChild(el("span", "pill", "▶  YouTube link coming"));
+    player.appendChild(ph);
+  }
+  row.appendChild(player);
+
+  // Copy
+  const copy = el("div", "copy");
+  copy.appendChild(el("h3", null, "WHAT YOU'RE WATCHING"));
+  copy.appendChild(el("p", null, s.beat));
+  const pillRow = el("div");
+  pillRow.style.display = "flex";
+  pillRow.style.gap = ".35rem";
+  pillRow.style.flexWrap = "wrap";
+  pillRow.appendChild(el("span", "pill dim", `${s.n}_${s.slug}.mp4`));
+  if (s.youtube_id) {
+    const link = document.createElement("a");
+    link.className = "pill";
+    link.href = `https://youtu.be/${s.youtube_id}`;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = "▶  Watch on YouTube";
+    pillRow.appendChild(link);
+  }
+  copy.appendChild(pillRow);
+  row.appendChild(copy);
+  slide.appendChild(row);
+
+  return slide;
+}
+
+const slidesRoot = document.getElementById("slides");
+const navInner = document.getElementById("navInner");
+const closerLink = navInner.lastElementChild; // the ★
+
+SEGMENTS.forEach(s => {
+  slidesRoot.appendChild(renderSlide(s));
+  const a = document.createElement("a");
+  a.href = `#s${s.n}`;
+  a.textContent = String(s.n);
+  navInner.insertBefore(a, closerLink);
+});
+
+document.getElementById("progress").textContent =
+  `${SEGMENTS.length} videos · ${SEGMENTS.filter(s => s.youtube_id).length} live, ${SEGMENTS.filter(s => !s.youtube_id).length} pending YouTube`;
+</script>
+</body>
+</html>

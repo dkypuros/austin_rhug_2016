@@ -1,0 +1,19 @@
+Austin RHUG 2026 — demo walkthrough deck
+
+Companion presentation for the 17 screen recordings in
+/Users/davidkypuros/Documents/Git_ONLINE/austin_rhug_obs/mp4 (chronological order
+preserved by the 1_…17_… filename prefix).
+
+Plan:
+- Cover slide
+- One slide per video, in recording order, with a thumbnail (extracted
+  frame from austin_rhug_obs/frames/) and a 1-2 sentence summary.
+  The user will replace the placeholder URL on each slide with the
+  YouTube link after upload — embedding is out of scope for this build.
+- Closer slide pointing at issue #1 / #2.
+
+Build:
+  cd presentation_harness/pptx/austin_rhug_2026
+  ../venv/bin/python build_deck.py
+Output:
+  presentation_harness/pptx/austin_rhug_2026/austin_rhug_2026.pptx
