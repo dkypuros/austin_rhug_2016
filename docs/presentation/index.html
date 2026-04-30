@@ -51,6 +51,7 @@
   .player iframe, .player img { width: 100%; height: 100%; display: block; border: 0; }
   .player .placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: var(--fg); background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.55)); pointer-events: none; }
   .player .placeholder .pill { background: rgba(20,24,32,.85); color: var(--dim); }
+  .player .duration { position: absolute; bottom: .5rem; right: .55rem; padding: .15rem .45rem; font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff; background: rgba(0,0,0,.78); border-radius: 4px; pointer-events: none; letter-spacing: .02em; }
 
   .copy h3 { color: var(--dim); font-size: .8rem; letter-spacing: .14em; margin: .25rem 0 .5rem; font-weight: 700; }
   .copy p { font-size: 1.02rem; line-height: 1.55; margin: 0 0 1rem; }
@@ -155,6 +156,20 @@
  *
  * Leave youtube_id null to show the thumbnail with a "video coming" overlay.
  */
+
+// Video durations (seconds) probed via ffprobe on the source mp4s.
+const DURATIONS = {
+  1: 39,    2: 154,   3: 66,    4: 1335,  5: 132,
+  6: 185,   7: 27,    8: 128,   9: 20,    10: 274,
+  11: 2716, 12: 31,   13: 394,  14: 17,   15: 1790,
+  16: 22,   17: 28,
+};
+function fmtDur(sec) {
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (h) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
 
 // SVG palette aligned with the deck's CSS variables.
 const D = { bg:"#161c2a", line:"#2b3346", dim:"#9ba3af", fg:"#f5f5f5", accent:"#ee0000", pill:"#222a36", green:"#3fb950", mono:"ui-monospace, SFMono-Regular, Menlo, monospace" };
@@ -503,6 +518,10 @@ function renderSlide(s) {
     const ph = el("div", "placeholder");
     ph.appendChild(el("span", "pill", "▶  YouTube link coming"));
     player.appendChild(ph);
+  }
+  if (DURATIONS[s.n] != null) {
+    const dur = el("span", "duration", fmtDur(DURATIONS[s.n]));
+    player.appendChild(dur);
   }
   row.appendChild(player);
 
