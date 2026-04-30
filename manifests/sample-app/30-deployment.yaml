@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-chat
+  namespace: composer-ai-apps-demo
+  labels:
+    app: sample-chat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-chat
+  template:
+    metadata:
+      labels:
+        app: sample-chat
+    spec:
+      containers:
+        - name: server
+          image: registry.access.redhat.com/ubi9/python-311:latest
+          command: ["python3", "/opt/app/server.py"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: OPENAI_DEFAULT_URL
+              value: https://integrate.api.nvidia.com/v1
+            - name: OPENAI_DEFAULT_MODELNAME
+              value: meta/llama-3.1-8b-instruct
+            - name: OPENAI_DEFAULT_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-credentials
+                  key: apiKey
+          volumeMounts:
+            - name: code
+              mountPath: /opt/app
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 10
+      volumes:
+        - name: code
+          configMap:
+            name: sample-chat-code

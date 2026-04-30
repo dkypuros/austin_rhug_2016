@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample-chat-code
+  namespace: composer-ai-apps-demo
+data:
+  server.py: |
+    SERVER_PY_PLACEHOLDER

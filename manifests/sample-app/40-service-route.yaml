@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-chat
+  namespace: composer-ai-apps-demo
+spec:
+  selector:
+    app: sample-chat
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: sample-chat
+  namespace: composer-ai-apps-demo
+spec:
+  to:
+    kind: Service
+    name: sample-chat
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
