@@ -842,7 +842,7 @@ function renderSlide(s) {
     audio.controls = true;
     audio.preload = "metadata";
     const source = document.createElement("source");
-    source.src = `audio/${s.n}_${s.slug}.mp3`;
+    source.src = `audio/${String(s.n).padStart(2, "0")}_${s.slug}.mp3`;
     source.type = "audio/mpeg";
     audio.appendChild(source);
     wrap.appendChild(audio);
