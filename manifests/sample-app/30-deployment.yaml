@@ -1,48 +1,148 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sample-chat
+  name: sample-chat-backend
   namespace: composer-ai-apps-demo
   labels:
-    app: sample-chat
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sample-chat
+      app.kubernetes.io/name: sample-chat
+      app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
-        app: sample-chat
+        app.kubernetes.io/name: sample-chat
+        app.kubernetes.io/component: backend
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-        - name: server
-          image: registry.access.redhat.com/ubi9/python-311:latest
-          command: ["python3", "/opt/app/server.py"]
+        - name: backend
+          image: sample-chat-backend:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+              protocol: TCP
           env:
             - name: PORT
               value: "8080"
             - name: OPENAI_DEFAULT_URL
-              value: https://integrate.api.nvidia.com/v1
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: OPENAI_DEFAULT_URL
             - name: OPENAI_DEFAULT_MODELNAME
-              value: meta/llama-3.1-8b-instruct
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: OPENAI_DEFAULT_MODELNAME
             - name: OPENAI_DEFAULT_APIKEY
               valueFrom:
                 secretKeyRef:
                   name: llm-credentials
                   key: apiKey
-          volumeMounts:
-            - name: code
-              mountPath: /opt/app
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           readinessProbe:
-            httpGet: { path: /healthz, port: 8080 }
-            initialDelaySeconds: 2
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
           livenessProbe:
-            httpGet: { path: /healthz, port: 8080 }
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-chat-frontend
+  namespace: composer-ai-apps-demo
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-chat
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sample-chat
+        app.kubernetes.io/component: frontend
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: frontend
+          image: sample-chat-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: 0.0.0.0
+            - name: BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: BACKEND_URL
+            - name: NEXT_PUBLIC_APP_TITLE
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: NEXT_PUBLIC_APP_TITLE
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
             initialDelaySeconds: 10
-      volumes:
-        - name: code
-          configMap:
-            name: sample-chat-code
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

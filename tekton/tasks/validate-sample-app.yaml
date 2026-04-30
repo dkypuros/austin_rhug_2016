@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: validate-sample-app
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/part-of: austin-rhug-2026-demo
+spec:
+  description: Render and client-side validate the sample chat OpenShift manifests without applying them.
+  params:
+    - name: manifest-path
+      type: string
+      default: manifests/sample-app
+      description: Repository-relative path to the sample app kustomization.
+  workspaces:
+    - name: source
+      description: Checkout of the repository containing the manifests.
+  steps:
+    - name: kustomize-dry-run-and-secret-check
+      image: bitnami/kubectl@sha256:98736aabcecb8d3cbcdcd7b132d14b1d67ed99bac2f06d471f06235933103df3
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        manifest_path="$(params.manifest-path)"
+        rendered="/tmp/sample-app-rendered.yaml"
+
+        kubectl kustomize "$manifest_path" > "$rendered"
+
+        if grep -Eq '^kind:[[:space:]]*Secret$' "$rendered"; then
+          echo "Refusing rendered inline Secret resources; create llm-credentials out of band" >&2
+          exit 1
+        fi
+
+        if find "$manifest_path" -type f ! -name '*.example' -exec grep -Il '^kind:[[:space:]]*Secret$' {} + | grep -q .; then
+          echo "Refusing non-example Secret manifests under $manifest_path" >&2
+          exit 1
+        fi
+
+        if grep -E '(OPENAI_DEFAULT_APIKEY|apiKey:)[[:space:]]*[^$({]' "$rendered"; then
+          echo "Rendered manifests appear to contain inline API key material" >&2
+          exit 1
+        fi
+
+        kubectl apply --dry-run=client --validate=false -f "$rendered"

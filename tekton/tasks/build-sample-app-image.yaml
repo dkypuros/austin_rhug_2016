@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-sample-app-image
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/part-of: austin-rhug-2026-demo
+spec:
+  description: Build and push one sample app container image from a repository workspace using Buildah.
+  params:
+    - name: image
+      type: string
+      description: Fully qualified destination image reference.
+    - name: context-dir
+      type: string
+      description: Repository-relative build context directory.
+    - name: dockerfile
+      type: string
+      description: Repository-relative Dockerfile path.
+    - name: tls-verify
+      type: string
+      default: "true"
+      description: Whether Buildah should verify registry TLS certificates when pushing.
+  workspaces:
+    - name: source
+      description: Checkout of the repository containing app source.
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:v1.40
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        image="$(params.image)"
+        context_dir="$(params.context-dir)"
+        dockerfile="$(params.dockerfile)"
+        tls_verify="$(params.tls-verify)"
+
+        test -f "$dockerfile"
+        test -d "$context_dir"
+
+        buildah bud --layers -f "$dockerfile" -t "$image" "$context_dir"
+        buildah push --tls-verify="$tls_verify" "$image"

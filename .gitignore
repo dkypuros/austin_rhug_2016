@@ -44,3 +44,12 @@ kubeconfig*
 *.pfx
 id_rsa
 id_ed25519
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+__pycache__/
+*.py[cod]
+package-lock.json
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo

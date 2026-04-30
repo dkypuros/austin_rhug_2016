@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: sample-app
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/part-of: austin-rhug-2026-demo
+spec:
+  description: Least-privilege project for the Austin RHUG sample chat app.
+  sourceRepos:
+    - https://github.com/dkypuros/austin_rhug_2016.git
+  destinations:
+    - namespace: composer-ai-apps-demo
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: route.openshift.io
+      kind: Route

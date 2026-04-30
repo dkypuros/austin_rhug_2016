@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/part-of: austin-rhug-2026-demo
+spec:
+  project: sample-app
+  source:
+    repoURL: https://github.com/dkypuros/austin_rhug_2016.git
+    targetRevision: main
+    path: manifests/sample-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: composer-ai-apps-demo
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

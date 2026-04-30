@@ -1,0 +1,89 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: sample-app-ci
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/part-of: austin-rhug-2026-demo
+spec:
+  description: Validate sample app manifests and build backend/frontend images for GitOps deployment.
+  params:
+    - name: manifest-path
+      type: string
+      default: manifests/sample-app
+      description: Repository-relative path to validate with kustomize.
+    - name: backend-image
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000/composer-ai-apps-demo/sample-chat-backend:latest
+      description: Destination image for the Python inference backend.
+    - name: frontend-image
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000/composer-ai-apps-demo/sample-chat-frontend:latest
+      description: Destination image for the Next.js frontend.
+    - name: backend-context-dir
+      type: string
+      default: app
+      description: Build context for the backend image.
+    - name: backend-dockerfile
+      type: string
+      default: app/Dockerfile
+      description: Dockerfile for the backend image.
+    - name: frontend-context-dir
+      type: string
+      default: frontend
+      description: Build context for the frontend image.
+    - name: frontend-dockerfile
+      type: string
+      default: frontend/Dockerfile
+      description: Dockerfile for the frontend image.
+    - name: tls-verify
+      type: string
+      default: "true"
+      description: Whether Buildah should verify registry TLS certificates when pushing.
+  workspaces:
+    - name: source
+      description: Checkout of this repository.
+  tasks:
+    - name: validate-manifests
+      taskRef:
+        name: validate-sample-app
+      params:
+        - name: manifest-path
+          value: $(params.manifest-path)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-backend
+      runAfter:
+        - validate-manifests
+      taskRef:
+        name: build-sample-app-image
+      params:
+        - name: image
+          value: $(params.backend-image)
+        - name: context-dir
+          value: $(params.backend-context-dir)
+        - name: dockerfile
+          value: $(params.backend-dockerfile)
+        - name: tls-verify
+          value: $(params.tls-verify)
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-frontend
+      runAfter:
+        - validate-manifests
+      taskRef:
+        name: build-sample-app-image
+      params:
+        - name: image
+          value: $(params.frontend-image)
+        - name: context-dir
+          value: $(params.frontend-context-dir)
+        - name: dockerfile
+          value: $(params.frontend-dockerfile)
+        - name: tls-verify
+          value: $(params.tls-verify)
+      workspaces:
+        - name: source
+          workspace: source

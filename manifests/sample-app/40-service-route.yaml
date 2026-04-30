@@ -1,25 +1,69 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: sample-chat
+  name: sample-chat-backend
   namespace: composer-ai-apps-demo
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: backend
 spec:
   selector:
-    app: sample-chat
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: backend
   ports:
     - name: http
       port: 8080
-      targetPort: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-chat-frontend
+  namespace: composer-ai-apps-demo
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: frontend
+spec:
+  selector:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP
 ---
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: sample-chat
   namespace: composer-ai-apps-demo
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: frontend
 spec:
   to:
     kind: Service
-    name: sample-chat
+    name: sample-chat-frontend
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: sample-chat-api
+  namespace: composer-ai-apps-demo
+  labels:
+    app.kubernetes.io/name: sample-chat
+    app.kubernetes.io/component: backend
+spec:
+  to:
+    kind: Service
+    name: sample-chat-backend
   port:
     targetPort: http
   tls:
