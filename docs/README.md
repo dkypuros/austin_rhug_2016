@@ -31,3 +31,23 @@ See also:
 
 - [`RAG/architecture.md`](RAG/architecture.md) for the RAG endpoint contract and promotion path.
 - [`NVIDIA Models/embeddings-and-rerankers.md`](NVIDIA%20Models/embeddings-and-rerankers.md) for NVIDIA request shapes and entitlement notes.
+
+
+## Current completed demo state
+
+The repository now demonstrates both paths live on OpenShift:
+
+1. **Chat path:** Next.js frontend -> Python backend `/chat` -> OpenShift AI `vllm` route.
+2. **RAG path:** Next.js frontend -> Python backend `/rag` -> hosted NVIDIA embeddings -> hosted NVIDIA reranker -> OpenShift AI `vllm` route.
+
+The public review route is:
+
+```text
+https://sample-chat-composer-ai-apps-demo.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/
+```
+
+Use Chat mode for a direct vLLM smoke test. Use RAG mode with supplied passages to show retrieval, reranking, selected passages, and grounded vLLM generation.
+
+Important implementation detail: the hosted NVIDIA reranker URL uses the route slug `llama-3_2-nv-rerankqa-1b-v2`, while the JSON request body model id remains `nvidia/llama-3.2-nv-rerankqa-1b-v2`. Keep those distinct.
+
+For the full operator walkthrough, use the root [`README.md`](../README.md).

@@ -6,8 +6,9 @@ This directory contains the OpenShift sample-app manifests for the Austin RHUG A
 Route/Service: sample-chat-frontend
   -> Next.js frontend
       -> Service: sample-chat-backend
-          -> Python backend /info and /chat
-              -> OpenAI-compatible inference endpoint
+          -> Python backend /info, /chat, /rag/info, and /rag
+              -> OpenShift AI vLLM chat endpoint
+              -> hosted NVIDIA embeddings/reranker endpoints for Phase A RAG
 ```
 
 The namespace is `composer-ai-apps-demo` so the demo does not touch live `composer-ai-apps` workloads.
@@ -24,7 +25,7 @@ OPENAI_DEFAULT_MODELNAME  e.g. vllm                          (RHOAI vLLM)
 OPENAI_INSECURE_TLS       optional lab-only escape hatch for self-signed TLS
 EMBEDDINGS_URL            hosted NVIDIA embeddings endpoint for Phase A RAG
 EMBEDDINGS_MODEL          e.g. nvidia/nv-embedqa-e5-v5
-RERANK_URL                hosted NVIDIA reranker endpoint for Phase A RAG
+RERANK_URL                hosted NVIDIA reranker endpoint for Phase A RAG; URL slug uses llama-3_2
 RERANK_MODEL              e.g. nvidia/llama-3.2-nv-rerankqa-1b-v2
 ```
 
@@ -45,6 +46,16 @@ The kustomization points both deployments at the OpenShift internal registry:
 | `kustomization.yaml` | expected render entrypoint for Argo CD and local validation, when present |
 
 Some file names may change as the manifest lane migrates from the original single-container sample. Preserve the frontend/backend separation and the secret boundary above.
+
+## Current live verification
+
+As of the issue #2 closeout, this manifest path has been synced by Argo CD and verified live with:
+
+- `GET /rag/info` returning `chat_model=vllm`, `embeddings_model=nvidia/nv-embedqa-e5-v5`, and `rerank_model=nvidia/llama-3.2-nv-rerankqa-1b-v2`;
+- `POST /rag` returning HTTP 200 with `reply`, `used_passages`, and `used_passage_indexes`;
+- frontend route rendering the Chat/RAG UI.
+
+`llm-credentials` is still created out of band. It must contain the real NVIDIA API key for hosted retrieval to work, but the value must never be committed.
 
 ## Local validation
 

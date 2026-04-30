@@ -10,7 +10,7 @@ Use this section as the fast handoff before making changes. It captures the curr
 
 - **GitHub repo:** `https://github.com/dkypuros/austin_rhug_2016.git`
 - **Branch:** `main`
-- **Current app direction:** the sample app now targets the OpenShift AI/RHOAI `vllm` model deployment shown in the OpenShift AI dashboard, not the NVIDIA-hosted NGC endpoint.
+- **Current app direction:** chat generation targets the OpenShift AI/RHOAI `vllm` model deployment, and the completed Phase A RAG lane uses hosted NVIDIA embeddings + reranking before sending grounded context to that same vLLM chat endpoint.
 - **OpenShift app namespace:** `composer-ai-apps-demo`
 - **OpenShift AI model namespace:** `composer-ai-apps`
 - **Frontend route for review:** `https://sample-chat-composer-ai-apps-demo.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com`
@@ -24,9 +24,60 @@ The source of truth for the deployed inference target is:
 # manifests/sample-app/10-configmap-code.yaml
 OPENAI_DEFAULT_URL: https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1
 OPENAI_DEFAULT_MODELNAME: vllm
+EMBEDDINGS_URL: https://integrate.api.nvidia.com/v1/embeddings
+EMBEDDINGS_MODEL: nvidia/nv-embedqa-e5-v5
+RERANK_URL: https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking
+RERANK_MODEL: nvidia/llama-3.2-nv-rerankqa-1b-v2
 ```
 
-The live RHOAI route accepts OpenAI-compatible chat calls without a real bearer token. The backend still expects `OPENAI_DEFAULT_APIKEY` to exist because it shares the same provider contract with authenticated endpoints; for this vLLM route, keep the cluster `llm-credentials` Secret as a harmless placeholder unless switching back to a provider that requires a real key.
+### What has been accomplished so far
+
+1. Created and pushed the private GitHub repository `dkypuros/austin_rhug_2016`.
+2. Added a two-tier sample application: Python inference backend plus Next.js/shadcn-style frontend.
+3. Deployed the app to OpenShift in `composer-ai-apps-demo` with public frontend and backend routes.
+4. Pivoted chat generation from hosted NVIDIA chat to the right-hand OpenShift AI `vllm` endpoint in `composer-ai-apps`.
+5. Added GitOps resources under `gitops/argocd/`; Argo CD `sample-app` tracks `main` and is currently `Synced`/`Healthy`.
+6. Added Tekton validation/build resources under `tekton/`; the sample pipeline validates manifests and builds backend/frontend images.
+7. Implemented issue #2 Phase A RAG: `/rag`, `/rag/info`, RAG UI toggle, model pills, passage selection, hosted NVIDIA embeddings, hosted NVIDIA reranking, and vLLM-grounded answer generation.
+8. Verified live end-to-end RAG through the route after refreshing the backend Secret with a real NVIDIA key.
+
+### How to see it working
+
+Open the frontend route and use the same card in two modes:
+
+1. **Chat mode** — ask a normal prompt and click **Send prompt**. This goes `browser -> frontend -> backend /chat -> OpenShift AI vLLM`.
+2. **RAG mode** — click **RAG**, keep or paste one passage per line, ask a question about those passages, then click **Run RAG**. This goes `browser -> frontend -> backend /rag -> NVIDIA embeddings -> NVIDIA reranker -> OpenShift AI vLLM`.
+
+Expected visible evidence in RAG mode:
+
+- model pills show `chat: vllm`, `embed: nvidia/nv-embedqa-e5-v5`, and `rerank: nvidia/llama-3.2-nv-rerankqa-1b-v2`;
+- the answer appears in the reply panel;
+- **Used passages** lists the passages selected by retrieval/reranking.
+
+For a direct API proof:
+
+```sh
+API="https://sample-chat-api-composer-ai-apps-demo.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com"
+
+curl -sk "$API/rag/info" | python3 -m json.tool
+
+curl -sk -X POST "$API/rag" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "query":"What runs models on GPU nodes?",
+    "passages":[
+      "OpenShift AI ships vLLM model serving for GPUs.",
+      "Bananas are yellow.",
+      "KServe exposes model inference endpoints on OpenShift."
+    ],
+    "top_k":3,
+    "top_n":2
+  }' | python3 -m json.tool
+```
+
+A successful response includes `model: "vllm"`, the NVIDIA embed/rerank model names, `reply`, `used_passages`, and `used_passage_indexes`.
+
+The live RHOAI route accepts OpenAI-compatible chat calls without a real bearer token, but the completed RAG lane uses the same backend-side `OPENAI_DEFAULT_APIKEY` for hosted NVIDIA embeddings and reranking. In this lab, `llm-credentials` must therefore contain a real NVIDIA API key for `/rag` while still staying backend-only and out of Git.
 
 ### Argo CD / OpenShift GitOps state
 
@@ -75,7 +126,7 @@ The reusable pipeline expects a workspace named `source` containing a checkout o
 
 ### Safe smoke-test commands
 
-After a deploy or Argo sync, verify the harness with:
+After a deploy or Argo sync, verify the harness with frontend-proxied calls:
 
 ```sh
 FRONTEND_HOST=$(oc -n composer-ai-apps-demo get route sample-chat -o jsonpath='{.spec.host}')
@@ -85,6 +136,12 @@ curl -k -sS "https://$FRONTEND_HOST/api/info"
 curl -k -sS "https://$FRONTEND_HOST/api/chat" \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"Reply with exactly: vLLM smoke test"}'
+
+curl -k -sS "https://$FRONTEND_HOST/api/rag/info"
+
+curl -k -sS -X POST "https://$FRONTEND_HOST/api/rag" \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"What runs models on GPU nodes?","passages":["OpenShift AI ships vLLM model serving for GPUs.","Bananas are yellow.","KServe exposes model inference endpoints on OpenShift."],"top_k":3,"top_n":2}'
 ```
 
 Expected `/api/info` essentials:
@@ -93,6 +150,17 @@ Expected `/api/info` essentials:
 {
   "backend_url": "https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1",
   "model": "vllm"
+}
+```
+
+Expected `/api/rag/info` essentials:
+
+```json
+{
+  "chat_model": "vllm",
+  "embeddings_model": "nvidia/nv-embedqa-e5-v5",
+  "rerank_model": "nvidia/llama-3.2-nv-rerankqa-1b-v2",
+  "rag_endpoint": "/rag"
 }
 ```
 
@@ -110,7 +178,7 @@ Expected `/api/info` essentials:
 README.md                          # Project harness instructions
 CLAUDE.md                          # AI-agent safety and validation instructions
 app/                               # Python OpenAI-compatible inference backend
-  server.py                        # Exposes /healthz, /info, and POST /chat
+  server.py                        # Exposes /healthz, /info, /chat, /rag, and /rag/info
   chat.py                          # CLI chat helper using the same env contract
   .env.nvidia.example              # Safe NVIDIA example values only
   .env.rhoai.example               # Safe RHOAI example values only
@@ -135,23 +203,28 @@ Keep the architecture stable: browser traffic goes to the Next.js frontend, the 
 
 ```text
 Browser
-  -> Next.js frontend (shadcn-style chat UI)
-      -> Python backend /info and /chat
-          -> OpenAI-compatible endpoint (NVIDIA NGC or RHOAI vLLM)
+  -> Next.js frontend (shadcn-style chat + RAG UI)
+      -> Python backend /info, /chat, /rag/info, /rag
+          -> OpenShift AI vLLM chat endpoint
+          -> hosted NVIDIA embeddings endpoint
+          -> hosted NVIDIA reranker endpoint
 ```
 
-- **Frontend:** Next.js App Router UI under `frontend/`. It displays backend/model info, accepts prompts, submits chat requests through a configured backend URL or frontend API/proxy, and surfaces latency/error details.
-- **Backend:** `app/server.py` preserves the demo contract:
+- **Frontend:** Next.js App Router UI under `frontend/`. It displays backend/model info, keeps Chat as the default mode, adds a RAG toggle with supplied passages, and renders the passages selected by retrieval/reranking.
+- **Backend:** `app/server.py` preserves and extends the demo contract:
   - `GET /healthz` for readiness/liveness
-  - `GET /info` for backend/model metadata
+  - `GET /info` for chat backend/model metadata
   - `POST /chat` with a prompt payload and OpenAI-compatible response semantics
+  - `GET /rag/info` for chat/embedding/reranker metadata
+  - `POST /rag` with `{query, passages, top_k, top_n}` for embed -> cosine top-K -> rerank top-N -> vLLM generation
 - **Inference configuration:** The backend continues to use:
   - `OPENAI_DEFAULT_URL`
   - `OPENAI_DEFAULT_APIKEY`
   - `OPENAI_DEFAULT_MODELNAME`
   - optional `OPENAI_INSECURE_TLS` for lab-only self-signed TLS cases
-- **GitOps:** Argo CD should sync declarative app resources from `manifests/sample-app/`; manual sync is preferred for demo safety.
-- **Tekton:** Pipelines should validate YAML/Kustomize/static secret policy and, when feasible, build or lint the frontend/backend images.
+  - `EMBEDDINGS_URL`, `EMBEDDINGS_MODEL`, `RERANK_URL`, `RERANK_MODEL` for the RAG retrieval lane
+- **GitOps:** Argo CD syncs declarative app resources from `manifests/sample-app/`; manual sync remains preferred for demo safety.
+- **Tekton:** Pipelines validate YAML/Kustomize/static secret policy, assert the RAG config wiring, and build backend/frontend images.
 
 ## Security defaults
 
