@@ -5,9 +5,10 @@ resources:
   - 10-configmap-code.yaml
   - 30-deployment.yaml
   - 40-service-route.yaml
-commonLabels:
-  app.kubernetes.io/name: sample-chat
-  app.kubernetes.io/part-of: austin-rhug-2026-demo
+labels:
+  - pairs:
+      app.kubernetes.io/name: sample-chat
+      app.kubernetes.io/part-of: austin-rhug-2026-demo
 images:
   - name: sample-chat-backend
     newName: image-registry.openshift-image-registry.svc:5000/composer-ai-apps-demo/sample-chat-backend
