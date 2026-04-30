@@ -258,12 +258,13 @@
       <div class="badge" style="background:#222a36;color:var(--fg)">★</div>
       <h2>What we built</h2>
     </div>
-    <h2 style="font-size:2rem;margin:0 0 1rem">One client. Two backends. One commit between them.</h2>
+    <h2 style="font-size:2rem;margin:0 0 .35rem">Test in the cloud. Commit on-prem. Same contract end-to-end.</h2>
+    <p style="color:var(--dim);margin:0 0 1.1rem;font-size:.95rem">One client · two backends · one commit between them.</p>
     <ul>
-      <li>Same OpenAI-compatible client — three env vars choose the backend.</li>
-      <li>NGC (the NVAIE test surface) for evaluation; in-cluster vLLM on RHOAI when the use case fits.</li>
-      <li>Argo CD owns the swap; same Route, same UI, no code change.</li>
-      <li>Issue #2 extends the same seam to embeddings + reranking for full RAG.</li>
+      <li>Use AI harnesses to explore on NGC (the NVAIE test surface) — models, retrieval, evaluation — without committing infrastructure.</li>
+      <li>Same OpenAI-compatible client. Three env vars choose the backend.</li>
+      <li>When the use case fits, promote it on-prem on RHOAI through Argo CD + Tekton — same Route, same UI, no code change.</li>
+      <li>Microservices and inference stay interchangeable until you're ready to commit. Issue #2 extends the same seam to embeddings + reranking for full RAG.</li>
     </ul>
     <p class="links">github.com/dkypuros/austin_rhug_2016 · issues <a href="https://github.com/dkypuros/austin_rhug_2016/issues/1">#1</a> and <a href="https://github.com/dkypuros/austin_rhug_2016/issues/2">#2</a></p>
   </section>
