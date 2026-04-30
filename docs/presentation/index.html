@@ -78,6 +78,13 @@
   .context-pill:hover { background: #2a3142; border-color: var(--accent); }
   .context-pill .dot { width: .42rem; height: .42rem; border-radius: 999px; background: var(--accent); }
 
+  /* Floating QR badge */
+  .qr-badge { position: fixed; top: 1rem; right: 1rem; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .45rem .45rem .35rem; background: #fff; border-radius: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.4); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+  .qr-badge:hover { transform: scale(1.45); box-shadow: 0 8px 28px rgba(0,0,0,.55); }
+  .qr-badge img { display: block; width: 84px; height: 84px; }
+  .qr-badge .qr-label { font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; color: #0f141e; letter-spacing: .14em; }
+  @media (max-width: 700px) { .qr-badge img { width: 64px; height: 64px; } .qr-badge .qr-label { font-size: 8px; } }
+
   /* Narration audio */
   .narration { display: flex; align-items: center; gap: .55rem; margin-top: .9rem; padding: .55rem .7rem; background: var(--pill); border: 1px solid #2a3142; border-radius: 8px; }
   .narration .label { font-size: .72rem; letter-spacing: .12em; color: var(--dim); flex: 0 0 auto; font-weight: 700; }
@@ -112,6 +119,11 @@
 </style>
 </head>
 <body>
+
+<a class="qr-badge" href="https://dkypuros.github.io/austin_rhug_2016/presentation/" title="Scan to open this deck">
+  <img src="assets/deck-qr.svg" alt="QR code to the live deck">
+  <span class="qr-label">SCAN · DECK</span>
+</a>
 
 <header class="topbar">
   <div class="brand">AUSTIN RHUG <b>2026</b></div>
