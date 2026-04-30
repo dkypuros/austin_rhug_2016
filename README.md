@@ -1,6 +1,108 @@
 # Austin RHUG 2026 AI sample app GitOps/Tekton harness
 
-This repository demonstrates a Red Hat OpenShift AI chat sample with a Next.js frontend, a Python inference backend, and local-first GitOps/Tekton validation. It is intended to be pushed later to `https://github.com/dkypuros/austin_rhug_2016.git`, but normal development and verification should not mutate a live cluster unless an operator explicitly chooses to apply manifests.
+This repository demonstrates a Red Hat OpenShift AI chat sample with a Next.js frontend, a Python inference backend, and GitOps/Tekton validation. It is pushed to `https://github.com/dkypuros/austin_rhug_2016.git` and currently has a verified deployment on the lab OpenShift cluster. Normal development and verification should still avoid live-cluster mutation unless an operator explicitly asks for an apply/sync step.
+
+## Current harness state for future agents
+
+Use this section as the fast handoff before making changes. It captures the currently verified direction of the sample app and the cluster automation surfaces.
+
+### Verified live deployment
+
+- **GitHub repo:** `https://github.com/dkypuros/austin_rhug_2016.git`
+- **Branch:** `main`
+- **Current app direction:** the sample app now targets the OpenShift AI/RHOAI `vllm` model deployment shown in the OpenShift AI dashboard, not the NVIDIA-hosted NGC endpoint.
+- **OpenShift app namespace:** `composer-ai-apps-demo`
+- **OpenShift AI model namespace:** `composer-ai-apps`
+- **Frontend route for review:** `https://sample-chat-composer-ai-apps-demo.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com`
+- **Backend route for direct API smoke tests:** `https://sample-chat-api-composer-ai-apps-demo.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com`
+- **RHOAI vLLM inference route:** `https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1`
+- **Model id:** `vllm`
+
+The source of truth for the deployed inference target is:
+
+```yaml
+# manifests/sample-app/10-configmap-code.yaml
+OPENAI_DEFAULT_URL: https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1
+OPENAI_DEFAULT_MODELNAME: vllm
+```
+
+The live RHOAI route accepts OpenAI-compatible chat calls without a real bearer token. The backend still expects `OPENAI_DEFAULT_APIKEY` to exist because it shares the same provider contract with authenticated endpoints; for this vLLM route, keep the cluster `llm-credentials` Secret as a harmless placeholder unless switching back to a provider that requires a real key.
+
+### Argo CD / OpenShift GitOps state
+
+Argo CD resources live in `gitops/argocd/`:
+
+- `gitops/argocd/sample-app-project.yaml`
+- `gitops/argocd/sample-app-application.yaml`
+
+Expected live state:
+
+```sh
+oc -n openshift-gitops get app sample-app
+# SYNC STATUS: Synced
+# HEALTH STATUS: Healthy
+```
+
+The Argo CD Application tracks:
+
+```text
+repoURL: https://github.com/dkypuros/austin_rhug_2016.git
+targetRevision: main
+path: manifests/sample-app
+destination namespace: composer-ai-apps-demo
+```
+
+If you change manifests under `manifests/sample-app/`, push first, then refresh/sync Argo CD to the pushed Git revision. Do not assume the cluster is using unpushed local files.
+
+### Tekton / OpenShift Pipelines state
+
+Tekton resources live in `tekton/`:
+
+- `tekton/tasks/validate-sample-app.yaml` renders `manifests/sample-app` with `oc kustomize`, rejects inline Secrets, and dry-runs the rendered OpenShift resources with `oc apply --dry-run=client`.
+- `tekton/tasks/build-sample-app-image.yaml` builds/pushes one image with Buildah.
+- `tekton/pipelines/sample-app-ci.yaml` validates manifests, then builds backend and frontend images in parallel.
+
+Expected live checks:
+
+```sh
+oc -n composer-ai-apps-demo get pipeline sample-app-ci
+oc -n composer-ai-apps-demo get task validate-sample-app build-sample-app-image
+```
+
+The Buildah task currently needs the `pipeline` service account to be allowed to use the privileged SCC on this lab cluster. That was granted during verification because the default `pipelines-scc` rejected privileged Buildah pods. Treat this as a lab/demo setting, not a production default.
+
+The reusable pipeline expects a workspace named `source` containing a checkout of this repository. Do not commit cluster-specific PipelineRuns, PVCs, credentials, or workspace seed pods unless the user explicitly asks for a reusable environment overlay.
+
+### Safe smoke-test commands
+
+After a deploy or Argo sync, verify the harness with:
+
+```sh
+FRONTEND_HOST=$(oc -n composer-ai-apps-demo get route sample-chat -o jsonpath='{.spec.host}')
+
+curl -k -sS "https://$FRONTEND_HOST/api/info"
+
+curl -k -sS "https://$FRONTEND_HOST/api/chat" \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"Reply with exactly: vLLM smoke test"}'
+```
+
+Expected `/api/info` essentials:
+
+```json
+{
+  "backend_url": "https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1",
+  "model": "vllm"
+}
+```
+
+### Harness guardrails
+
+- Prefer reading this README, `CLAUDE.md`, and `manifests/sample-app/README.md` before changing deployment behavior.
+- Keep real `.env_*`, kubeconfig, tokens, `.omx/`, `.omc/`, generated build output, `frontend/node_modules/`, and `frontend/.next/` out of Git.
+- If a user asks for a checkpoint before a pivot, create a small commit first, push it, then isolate the pivot in a follow-up commit.
+- For endpoint changes, update `manifests/sample-app/10-configmap-code.yaml`, verify `/api/info`, verify `/api/chat`, then commit/push.
+- When reporting completion, include the Git commit, Argo CD status, Tekton status if relevant, and the public route.
 
 ## What is included
 
@@ -27,7 +129,7 @@ docs/gh-cli-usage.md               # GitHub CLI quick reference
 .gitignore                         # Secret/runtime ignore policy
 ```
 
-Some lanes may add or rename individual manifests while the team update is in flight. Keep the architecture stable: browser traffic goes to the Next.js frontend, the frontend calls the Python backend, and the backend is the only component that talks to the OpenAI-compatible inference endpoint.
+Keep the architecture stable: browser traffic goes to the Next.js frontend, the frontend calls the Python backend, and the backend is the only component that talks to the OpenAI-compatible inference endpoint.
 
 ## Runtime architecture
 
@@ -81,9 +183,9 @@ See `docs/access.md` for environment-file and cluster access patterns. Keep real
 Use one of the safe example env files, then run the Python backend or CLI helper:
 
 ```sh
-cp app/.env.nvidia.example app/.env.nvidia
-# edit app/.env.nvidia locally; never commit it
-set -a; source app/.env.nvidia; set +a
+cp app/.env.rhoai.example app/.env.rhoai
+# edit app/.env.rhoai locally if the lab route changes; never commit it
+set -a; source app/.env.rhoai; set +a
 python3 app/server.py
 ```
 
@@ -136,13 +238,13 @@ kubectl kustomize apps/hello-world
 kubectl kustomize manifests/sample-app
 ```
 
-Run a client-side dry-run if `kubectl` is available:
+Run a client-side dry-run if `oc` is available and a temporary authenticated kubeconfig is set:
 
 ```sh
-kubectl kustomize manifests/sample-app | kubectl apply --dry-run=client --validate=false -f -
+oc kustomize manifests/sample-app | oc apply --dry-run=client --validate=false -f -
 ```
 
-`kubectl kustomize` does not require cluster credentials. Depending on your `kubectl` version and local kubeconfig, `kubectl apply --dry-run=client` may still attempt API discovery; if that happens, use an authenticated temporary kubeconfig or rely on YAML parse/Kustomize render checks until cluster access is available.
+`kubectl kustomize` or `oc kustomize` can render without cluster credentials. The dry-run apply step may still attempt API discovery, and the sample includes OpenShift `Route` resources, so prefer `oc apply --dry-run=client` with the current lab kubeconfig when validating the full rendered bundle.
 
 ## Deploy with Argo CD / OpenShift GitOps
 
@@ -156,7 +258,7 @@ oc apply -f gitops/argocd/sample-app-application.yaml
 Expected sample-app GitOps shape:
 
 - repo: `https://github.com/dkypuros/austin_rhug_2016.git`
-- revision: reviewed release branch or tag
+- revision: `main` for the current lab harness, or a reviewed release branch/tag if promoted later
 - path: `manifests/sample-app`
 - destination namespace: `composer-ai-apps-demo`
 
@@ -169,12 +271,12 @@ The Tekton Pipeline expects a workspace named `source` containing a checkout of 
 Apply Tekton definitions only when OpenShift Pipelines is installed and live-cluster mutation is intended:
 
 ```sh
-oc apply -f tekton/tasks/validate-manifests.yaml
-oc apply -f tekton/pipelines/hello-world-verify.yaml
-# apply any sample-app validation/build tasks or pipelines added by the manifest lane
+oc -n composer-ai-apps-demo apply -f tekton/tasks/validate-sample-app.yaml
+oc -n composer-ai-apps-demo apply -f tekton/tasks/build-sample-app-image.yaml
+oc -n composer-ai-apps-demo apply -f tekton/pipelines/sample-app-ci.yaml
 ```
 
-Then create an environment-specific `PipelineRun` that binds a workspace containing this repository checkout.
+Then create an environment-specific `PipelineRun` that binds a `source` workspace containing this repository checkout. On the current lab cluster, the Buildah image-build task requires the `pipeline` service account to be permitted to use the privileged SCC; keep that as a lab-specific operational grant rather than a production recommendation.
 
 ## GitHub workflow
 
