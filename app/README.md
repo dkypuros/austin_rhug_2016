@@ -4,8 +4,8 @@ Same inference contract, two runtimes. The CLI client (`chat.py`) and HTTP backe
 
 Required environment variables:
 
-- `OPENAI_DEFAULT_URL` — OpenAI-compatible base URL, for example `https://integrate.api.nvidia.com/v1`
-- `OPENAI_DEFAULT_APIKEY` — bearer token for the endpoint; keep it in local env or a Kubernetes Secret, never in git
+- `OPENAI_DEFAULT_URL` — OpenAI-compatible base URL, for example `https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1`
+- `OPENAI_DEFAULT_APIKEY` — bearer token when the endpoint requires one; use a harmless placeholder for this RHOAI vLLM route, and keep real tokens in local env or a Kubernetes Secret, never in git
 - `OPENAI_DEFAULT_MODELNAME` — model name sent to `/chat/completions`
 
 Optional environment variables:

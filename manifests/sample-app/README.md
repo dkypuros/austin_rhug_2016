@@ -17,10 +17,10 @@ The namespace is `composer-ai-apps-demo` so the demo does not touch live `compos
 The backend Deployment owns the inference credentials and provider configuration. Keep these env vars compatible with `app/server.py` and the CLI helper:
 
 ```text
-OPENAI_DEFAULT_URL        e.g. https://integrate.api.nvidia.com/v1
+OPENAI_DEFAULT_URL        e.g. https://vllm-composer-ai-apps.apps.cluster-nhsxz.nhsxz.sandbox1513.opentlc.com/v1
 OPENAI_DEFAULT_APIKEY     from Secret llm-credentials, key apiKey
-OPENAI_DEFAULT_MODELNAME  e.g. meta/llama-3.1-8b-instruct  (NVIDIA NGC)
-                          or  vllm                          (RHOAI vLLM)
+OPENAI_DEFAULT_MODELNAME  e.g. vllm                          (RHOAI vLLM)
+                          or  meta/llama-3.1-8b-instruct     (NVIDIA NGC)
 OPENAI_INSECURE_TLS       optional lab-only escape hatch for self-signed TLS
 ```
 

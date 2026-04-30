@@ -44,6 +44,12 @@ spec:
                 configMapKeyRef:
                   name: sample-chat-config
                   key: OPENAI_DEFAULT_MODELNAME
+            - name: OPENAI_INSECURE_TLS
+              valueFrom:
+                configMapKeyRef:
+                  name: sample-chat-config
+                  key: OPENAI_INSECURE_TLS
+                  optional: true
             - name: OPENAI_DEFAULT_APIKEY
               valueFrom:
                 secretKeyRef:
