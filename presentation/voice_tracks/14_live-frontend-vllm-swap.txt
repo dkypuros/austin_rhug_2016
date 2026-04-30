@@ -1,0 +1,1 @@
+So, here is the moment. David has updated three env values on the sample chat backend. The Next dot j s frontend at sample dash chat dot apps cluster is now showing the in cluster v L L M. backend, vllm dash composer dash ai dash apps. Model, vllm. Same UI, same Route. The local Granite model is serving.

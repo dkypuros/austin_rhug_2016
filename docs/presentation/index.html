@@ -78,6 +78,12 @@
   .context-pill:hover { background: #2a3142; border-color: var(--accent); }
   .context-pill .dot { width: .42rem; height: .42rem; border-radius: 999px; background: var(--accent); }
 
+  /* Narration audio */
+  .narration { display: flex; align-items: center; gap: .55rem; margin-top: .9rem; padding: .55rem .7rem; background: var(--pill); border: 1px solid #2a3142; border-radius: 8px; }
+  .narration .label { font-size: .72rem; letter-spacing: .12em; color: var(--dim); flex: 0 0 auto; font-weight: 700; }
+  .narration audio { flex: 1; height: 32px; }
+  .narration audio::-webkit-media-controls-panel { background: var(--pill); }
+
   /* Code pill */
   .code-pill { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .65rem; border-radius: 999px; background: var(--pill); color: var(--fg); font-size: .78rem; cursor: pointer; border: 1px solid #2a3142; transition: background .15s ease, border-color .15s ease; font-family: inherit; }
   .code-pill:hover { background: #2a3142; border-color: #4ec9b0; }
@@ -828,6 +834,17 @@ function renderSlide(s) {
   copy.appendChild(pillRow);
   row.appendChild(copy);
   slide.appendChild(row);
+
+  if (s.n !== 11) {
+    const wrap = el("div", "narration");
+    wrap.appendChild(el("span", "label", "🎙 NARRATION"));
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = `audio/${s.n}_${s.slug}.mp3`;
+    wrap.appendChild(audio);
+    slide.appendChild(wrap);
+  }
 
   return slide;
 }

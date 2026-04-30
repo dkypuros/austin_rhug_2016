@@ -1,0 +1,1 @@
+David verifies in the OpenShift console. Networking, Routes, project composer dash ai dash apps dash demo. The sample dash chat route is Accepted. The location URL is the public ingress for the demo app. The route is real. The cluster routed it. The app is live.

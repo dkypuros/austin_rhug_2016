@@ -1,0 +1,1 @@
+David tells OMC to cut the first release tag. The harness creates v 0 point 1 point 0 and pushes it to origin. The version 0 point 1 point 0 marker is now in git history. A stable point to come back to.

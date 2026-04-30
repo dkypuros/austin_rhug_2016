@@ -1,0 +1,1 @@
+So, the R A G flow is live in the U I. Three pills appear. chat, vllm. embed, nvidia slash n v dash embedqa dash e 5 dash v 5. rerank, nvidia slash llama 3 point 2 n v dash rerankqa 1 b v 2. Same backend, retrieval lane added. The Used passages list shows which sources got selected for the answer.

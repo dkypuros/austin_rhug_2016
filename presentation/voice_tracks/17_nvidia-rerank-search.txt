@@ -1,0 +1,1 @@
+David is on build dot nvidia dot com. He searches for Llama 3 point 2 N V dash RerankQA 1 b v 2. Two results return. The reranker itself, and a sibling embedder, llama 3 point 2 n v dash embedqa 1 b v 2. Both Downloadable. Both N I Ms. Both available through NVIDIA AI Enterprise.
