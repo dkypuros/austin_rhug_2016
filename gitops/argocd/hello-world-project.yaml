@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: hello-world
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: hello-world
+    app.kubernetes.io/part-of: austin-rhug-2016
+spec:
+  description: Least-privilege project for the hello-world GitOps harness.
+  sourceRepos:
+    - https://github.com/dkypuros/austin_rhug_2016.git
+  destinations:
+    - namespace: hello-world
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: route.openshift.io
+      kind: Route

@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: hello-world-verify
+  labels:
+    app.kubernetes.io/name: hello-world
+    app.kubernetes.io/part-of: austin-rhug-2016
+spec:
+  description: Validate the hello-world OpenShift manifests from a repository workspace.
+  params:
+    - name: manifest-path
+      type: string
+      default: apps/hello-world
+      description: Repository-relative path to validate.
+  workspaces:
+    - name: source
+      description: Checkout of this repository.
+  tasks:
+    - name: validate-manifests
+      taskRef:
+        name: validate-hello-world-manifests
+      params:
+        - name: manifest-path
+          value: $(params.manifest-path)
+      workspaces:
+        - name: source
+          workspace: source

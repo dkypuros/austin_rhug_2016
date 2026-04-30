@@ -1,0 +1,32 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: validate-hello-world-manifests
+  labels:
+    app.kubernetes.io/name: hello-world
+    app.kubernetes.io/part-of: austin-rhug-2016
+spec:
+  description: Render and client-side validate the hello-world kustomize manifests.
+  params:
+    - name: manifest-path
+      type: string
+      default: apps/hello-world
+      description: Repository-relative path to the kustomize manifest directory.
+  workspaces:
+    - name: source
+      description: Checkout of the repository containing the manifests.
+  steps:
+    - name: kustomize-and-dry-run
+      image: bitnami/kubectl@sha256:98736aabcecb8d3cbcdcd7b132d14b1d67ed99bac2f06d471f06235933103df3
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        manifest_path="$(params.manifest-path)"
+        rendered="/tmp/hello-world-rendered.yaml"
+        kubectl kustomize "$manifest_path" > "$rendered"
+        if grep -Eq '^kind:[[:space:]]*Secret$' "$rendered"; then
+          echo "Refusing rendered inline Secret resources in this harness" >&2
+          exit 1
+        fi
+        kubectl apply --dry-run=client --validate=false -f "$rendered"

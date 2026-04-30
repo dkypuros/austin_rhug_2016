@@ -1,0 +1,46 @@
+# macOS
+.DS_Store
+
+# Local environment and secret files. Keep examples tracked.
+.env
+.env.*
+.env_*
+.env_*.*
+!.env*.example
+!.env_*.example
+
+# Local GitHub CLI environment/secrets
+.env_gh_cli
+.env_gh_cli.*
+!.env_gh_cli.example
+
+# Local OpenShift/RHDP lab environment/secrets
+.env_openshift_lab
+.env_openshift_lab.*
+!.env_openshift_lab.example
+
+# Local NVIDIA API environment/secrets
+.env_NVIDIA
+.env_NVIDIA.*
+!.env_NVIDIA.example
+
+# Agent/runtime state and logs; never commit prompt history or session metadata.
+.omx/
+.omc/
+*.log
+*.pid
+
+# Kubernetes/OpenShift local credentials and generated state.
+.kube/
+kubeconfig
+kubeconfig*
+*.kubeconfig
+
+# Key/certificate material.
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
