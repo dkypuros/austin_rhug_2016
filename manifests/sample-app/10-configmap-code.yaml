@@ -12,7 +12,7 @@ data:
   OPENAI_INSECURE_TLS: "0"
   EMBEDDINGS_URL: https://integrate.api.nvidia.com/v1/embeddings
   EMBEDDINGS_MODEL: nvidia/nv-embedqa-e5-v5
-  RERANK_URL: https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3.2-nv-rerankqa-1b-v2/reranking
+  RERANK_URL: https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking
   RERANK_MODEL: nvidia/llama-3.2-nv-rerankqa-1b-v2
   BACKEND_URL: http://sample-chat-backend:8080
   NEXT_PUBLIC_APP_TITLE: Austin RHUG AI Chat

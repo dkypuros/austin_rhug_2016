@@ -109,7 +109,8 @@ nvidia/nv-rerankqa-mistral-4b-v3
 
 ```sh
 MODEL="nvidia/llama-3.2-nv-rerankqa-1b-v2"
-curl -sS "https://ai.api.nvidia.com/v1/retrieval/${MODEL}/reranking" \
+MODEL_PATH="nvidia/llama-3_2-nv-rerankqa-1b-v2"
+curl -sS "https://ai.api.nvidia.com/v1/retrieval/${MODEL_PATH}/reranking" \
   -H "Authorization: Bearer $NVIDIA_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -125,12 +126,16 @@ curl -sS "https://ai.api.nvidia.com/v1/retrieval/${MODEL}/reranking" \
 
 The response is a list of `{ "index": N, "logit": ... }` ordered by relevance — apply that order back to your original passages.
 
+The hosted llama-3.2 reranker URL slug currently uses `llama-3_2` while the JSON `model` value remains `nvidia/llama-3.2-nv-rerankqa-1b-v2`.
+
 ### Python helper
 
 ```python
 import json, os, urllib.request
 def rerank(query, passages, *, model="nvidia/llama-3.2-nv-rerankqa-1b-v2"):
-    url = f"https://ai.api.nvidia.com/v1/retrieval/{model}/reranking"
+    # The hosted URL slug uses 3_2 while the JSON model id remains 3.2.
+    model_path = model.replace("llama-3.2-", "llama-3_2-")
+    url = f"https://ai.api.nvidia.com/v1/retrieval/{model_path}/reranking"
     body = json.dumps({
         "model": model,
         "query": {"text": query},

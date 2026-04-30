@@ -22,7 +22,7 @@ The manifest seam for retrieval is:
 |---|---|
 | `EMBEDDINGS_URL` | `https://integrate.api.nvidia.com/v1/embeddings` |
 | `EMBEDDINGS_MODEL` | `nvidia/nv-embedqa-e5-v5` |
-| `RERANK_URL` | `https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3.2-nv-rerankqa-1b-v2/reranking` |
+| `RERANK_URL` | `https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking` |
 | `RERANK_MODEL` | `nvidia/llama-3.2-nv-rerankqa-1b-v2` |
 
 `OPENAI_DEFAULT_APIKEY` is still read from the backend `llm-credentials` Secret. For the existing RHOAI vLLM chat endpoint, the secret can remain a harmless placeholder. A real NVIDIA API key is required only when exercising the hosted NVIDIA embeddings or reranker endpoints.

@@ -23,7 +23,7 @@ Backend reads, in addition to the chat-path vars (`OPENAI_DEFAULT_URL`, `OPENAI_
 |---|---|---|
 | `EMBEDDINGS_URL` | `https://integrate.api.nvidia.com/v1/embeddings` | `https://embeddings-composer-ai-apps.apps.<cluster>/v1/embeddings` |
 | `EMBEDDINGS_MODEL` | `nvidia/nv-embedqa-e5-v5` | id from in-cluster `/v1/models` |
-| `RERANK_URL` | `https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3.2-nv-rerankqa-1b-v2/reranking` | in-cluster reranker route |
+| `RERANK_URL` | `https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking` | in-cluster reranker route |
 | `RERANK_MODEL` | `nvidia/llama-3.2-nv-rerankqa-1b-v2` | matching id |
 
 `OPENAI_DEFAULT_APIKEY` covers all three NVIDIA surfaces with one bearer token. In-cluster routes can use any placeholder.
