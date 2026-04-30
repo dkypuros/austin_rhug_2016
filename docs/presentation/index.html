@@ -78,12 +78,24 @@
   .context-pill:hover { background: #2a3142; border-color: var(--accent); }
   .context-pill .dot { width: .42rem; height: .42rem; border-radius: 999px; background: var(--accent); }
 
-  /* Floating QR badge */
-  .qr-badge { position: fixed; top: 1rem; right: 1rem; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .45rem .45rem .35rem; background: #fff; border-radius: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.4); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
-  .qr-badge:hover { transform: scale(1.45); box-shadow: 0 8px 28px rgba(0,0,0,.55); }
-  .qr-badge img { display: block; width: 84px; height: 84px; }
-  .qr-badge .qr-label { font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; color: #0f141e; letter-spacing: .14em; }
-  @media (max-width: 700px) { .qr-badge img { width: 64px; height: 64px; } .qr-badge .qr-label { font-size: 8px; } }
+  /* Floating QR badge — sits in the right-side gutter on wide screens */
+  .qr-badge { position: fixed; top: 50%; right: 1.5rem; transform: translateY(-50%); z-index: 60; display: flex; flex-direction: column; align-items: center; gap: .55rem; padding: .9rem .9rem .8rem; background: #fff; border-radius: 14px; box-shadow: 0 10px 36px rgba(0,0,0,.45); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+  .qr-badge:hover { transform: translateY(-50%) scale(1.05); box-shadow: 0 14px 44px rgba(0,0,0,.55); }
+  .qr-badge img { display: block; width: 200px; height: 200px; }
+  .qr-badge .qr-label { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: #0f141e; letter-spacing: .18em; }
+  .qr-badge .qr-sub { font: 500 10px -apple-system, system-ui, sans-serif; color: #4b5563; letter-spacing: .04em; max-width: 200px; text-align: center; line-height: 1.35; }
+  /* Below 1500px the gutter shrinks; collapse to a small top-right badge */
+  @media (max-width: 1500px) {
+    .qr-badge { top: 1rem; transform: none; right: 1rem; padding: .45rem .45rem .35rem; gap: .25rem; border-radius: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.4); }
+    .qr-badge:hover { transform: scale(1.45); box-shadow: 0 8px 28px rgba(0,0,0,.55); }
+    .qr-badge img { width: 84px; height: 84px; }
+    .qr-badge .qr-label { font-size: 9px; letter-spacing: .14em; }
+    .qr-badge .qr-sub { display: none; }
+  }
+  @media (max-width: 700px) {
+    .qr-badge img { width: 64px; height: 64px; }
+    .qr-badge .qr-label { font-size: 8px; }
+  }
 
   /* Narration audio */
   .narration { display: flex; align-items: center; gap: .55rem; margin-top: .9rem; padding: .55rem .7rem; background: var(--pill); border: 1px solid #2a3142; border-radius: 8px; }
@@ -123,6 +135,7 @@
 <a class="qr-badge" href="https://dkypuros.github.io/austin_rhug_2016/presentation/" title="Scan to open this deck">
   <img src="assets/deck-qr.svg" alt="QR code to the live deck">
   <span class="qr-label">SCAN · DECK</span>
+  <span class="qr-sub">Open the live deck on your phone</span>
 </a>
 
 <header class="topbar">
