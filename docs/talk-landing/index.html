@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oran Agent Harness — Austin RHUG 2026 Demo</title>
+  <meta name="description" content="Austin RHUG 2026 demo talk page with MP3, video, and project overview." />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2b;
+      --text: #e5ecff;
+      --muted: #9db1d6;
+      --primary: #58a6ff;
+      --accent: #7ee787;
+      --line: #22304b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(circle at 20% 0%, #13213f 0%, #0b1220 45%, #080d18 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+    }
+    header {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.5rem;
+      background: linear-gradient(180deg, #131e38, #0d172b);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+    }
+    p.subtitle { color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      background: rgba(17,26,43,0.9);
+    }
+    h2 { margin-top: 0; }
+    .pill {
+      display: inline-flex;
+      padding: .35rem .7rem;
+      border-radius: 999px;
+      border: 1px solid #243554;
+      color: #d7e5ff;
+      margin: .2rem .35rem .2rem 0;
+      font-size: .85rem;
+      background: #0c1628;
+      text-decoration: none;
+    }
+    .video-wrap {
+      position: relative;
+      padding-top: 56.25%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .video-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .diagram {
+      width: 100%;
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0d1628;
+      overflow: hidden;
+    }
+    figure { margin: 0; }
+    .divider { height: 1px; background: var(--line); margin: 1rem 0; }
+    ul { margin: .35rem 0 .85rem 1.25rem; }
+    li { margin: .35rem 0; color: var(--text); }
+    footer { margin-top: 1rem; color: var(--muted); font-size: .92rem; }
+    a { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Oran Agent Harness — Austin RHUG 2026</h1>
+      <p class="subtitle">Conference talk companion page with audio, video, and technical context</p>
+      <p>
+        <a class="pill" href="#audio">🎧 Listen</a>
+        <a class="pill" href="#video">📹 Watch</a>
+        <a class="pill" href="#notes">🧠 Architecture</a>
+      </p>
+    </header>
+
+    <section class="grid">
+      <article class="card" id="audio">
+        <h2>Talk audio (MP3)</h2>
+        <p>Use the built-in player to play the generated final talk track.</p>
+        <audio controls preload="none" style="width: 100%;" src="./assets/ultimate_demo_talk_track.mp3"></audio>
+        <p>
+          <a href="./assets/ultimate_demo_talk_track.mp3">Download MP3</a>
+        </p>
+        <p class="subtitle">Source: <code>ultimate_demo_talk_track.mp3</code> generated with Google Chirp HD Charon.</p>
+      </article>
+
+      <article class="card" id="video">
+        <h2>YouTube</h2>
+        <p>Conference recording / demo video (linked from YouTube):</p>
+        <div class="video-wrap">
+          <iframe src="https://www.youtube.com/embed/gFCSkPKoQNs" title="Austin RHUG 2026 demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <p class="subtitle">Open directly: <a href="https://youtu.be/gFCSkPKoQNs" target="_blank" rel="noopener">youtu.be/gFCSkPKoQNs</a></p>
+      </article>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="grid">
+      <article class="card" id="notes">
+        <h2>What this demo covers</h2>
+        <ul>
+          <li>Next.js frontend + Python API backend with OpenAI-compatible endpoint contracts.</li>
+          <li>Chat and RAG execution paths, with retrieval + re-ranking before generation.</li>
+          <li>OpenShift AI deployment topology and GitOps / Tekton validation pipeline.</li>
+          <li>Repository-based reproducibility for conference audience follow-up.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Session links</h2>
+        <p>
+          <a class="pill" href="https://github.com/dkypuros/austin_rhug_2016" target="_blank" rel="noopener">GitHub Repo</a>
+          <a class="pill" href="https://dkypuros.github.io/austin_rhug_2016/" target="_blank" rel="noopener">GitHub Page</a>
+        </p>
+        <p>Project files, code, and manifests remain versioned in the same repository.</p>
+      </article>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Diagram 1: End-to-end talk flow</h2>
+        <figure>
+          <svg class="diagram" viewBox="0 0 900 220" role="img" aria-label="Diagram: Browser to demo infrastructure flow">
+            <defs>
+              <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#1d2d4d"/>
+                <stop offset="1" stop-color="#101c33"/>
+              </linearGradient>
+            </defs>
+            <rect width="900" height="220" fill="url(#g1)" />
+            <rect x="40" y="45" width="150" height="50" fill="#172341" stroke="#2f4f82" rx="10" />
+            <rect x="250" y="45" width="170" height="50" fill="#172341" stroke="#2f4f82" rx="10" />
+            <rect x="480" y="45" width="150" height="50" fill="#172341" stroke="#2f4f82" rx="10" />
+            <rect x="690" y="45" width="170" height="50" fill="#172341" stroke="#2f4f82" rx="10" />
+            <text x="115" y="76" fill="#d6e2ff" text-anchor="middle">User browser</text>
+            <text x="335" y="76" fill="#d6e2ff" text-anchor="middle">Next.js frontend</text>
+            <text x="555" y="76" fill="#d6e2ff" text-anchor="middle">Python API</text>
+            <text x="775" y="76" fill="#d6e2ff" text-anchor="middle">OpenShift AI / NVIDIA</text>
+
+            <path d="M190 70 H250" stroke="#9fc1ff" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+            <path d="M420 70 H480" stroke="#9fc1ff" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+            <path d="M630 70 H690" stroke="#9fc1ff" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+
+            <rect x="40" y="140" width="820" height="40" fill="#142036" stroke="#2f4f82" rx="10" />
+            <text x="450" y="166" text-anchor="middle" fill="#d4def8">Chat + RAG path: frontend submits prompt, backend calls model endpoint(s), returns answer</text>
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0 0 L0 6 L7 3 z" fill="#9fc1ff" />
+              </marker>
+            </defs>
+          </svg>
+        </figure>
+      </article>
+
+      <article class="card">
+        <h2>Diagram 2: Assets for conference handoff</h2>
+        <figure>
+          <svg class="diagram" viewBox="0 0 900 220" role="img" aria-label="Diagram: Repository and published assets">
+            <rect x="0" y="0" width="900" height="220" fill="#0d1528" />
+            <rect x="55" y="40" width="190" height="60" fill="#182641" stroke="#2f4f82" rx="10" />
+            <rect x="295" y="40" width="190" height="60" fill="#182641" stroke="#2f4f82" rx="10" />
+            <rect x="535" y="40" width="190" height="60" fill="#182641" stroke="#2f4f82" rx="10" />
+            <text x="150" y="76" text-anchor="middle" fill="#d6e2ff">MP3 asset</text>
+            <text x="390" y="76" text-anchor="middle" fill="#d6e2ff">GitHub Repo</text>
+            <text x="630" y="76" text-anchor="middle" fill="#d6e2ff">GitHub Pages</text>
+
+            <path d="M245 70 H295" stroke="#7ee787" stroke-width="2.5" fill="none" marker-end="url(#arrow2)" />
+            <path d="M485 70 H535" stroke="#7ee787" stroke-width="2.5" fill="none" marker-end="url(#arrow2)" />
+
+            <rect x="55" y="140" width="300" height="45" fill="#17243f" stroke="#324d7a" rx="9" />
+            <rect x="545" y="140" width="180" height="45" fill="#17243f" stroke="#324d7a" rx="9" />
+            <text x="205" y="168" fill="#d4def8" text-anchor="middle">GitHub workflow publishes /docs/talk-landing as public site</text>
+            <text x="635" y="168" fill="#d4def8" text-anchor="middle">Attendees access both video + MP3</text>
+
+            <defs>
+              <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0 0 L0 6 L7 3 z" fill="#7ee787" />
+              </marker>
+            </defs>
+          </svg>
+        </figure>
+      </article>
+    </section>
+
+    <footer>
+      Built for conference distribution from the austin-rhug_2016 repository. Keep secrets in local .env files only.
+    </footer>
+  </main>
+</body>
+</html>
